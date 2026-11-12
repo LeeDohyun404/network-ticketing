@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Network Incident Ticketing</title>
+<style>
+:root{--bg:#eceff0;--pn:#fff;--ink:#14212b;--mu:#5d6d78;--ln:#d8dee1;--ac:#0e6f78;--acd:#0a5961;--red:#b3261e;--amb:#b86a08;--grn:#2b7a4b;--blu:#2f5f9e;--r:6px}
+*{box-sizing:border-box}
+body{margin:0;-webkit-text-size-adjust:100%;font:14.5px/1.5 Bahnschrift,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.hide{display:none!important}.mu{color:var(--mu)}.num{font-variant-numeric:tabular-nums}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid #bcc6cb;border-radius:var(--r);background:#fff}
+label{display:block;font-weight:600;font-size:.85rem;margin:0 0 4px}
+.f{margin-bottom:12px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{padding:8px 14px;border-radius:var(--r);border:1px solid var(--ac);background:var(--ac);color:#fff;cursor:pointer;font-weight:600}
+.btn:hover{background:var(--acd)}.btn.sec{background:#fff;color:var(--ink);border-color:#bcc6cb}.btn.sec:hover{background:#f3f6f6}
+.btn.sm{padding:4px 10px;font-size:.84rem}.btn.dng{background:#fff;color:var(--red);border-color:#e2b4b0}
+/* auth */
+#auth{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:20px}
+.box{width:100%;max-width:400px;background:var(--pn);border:1px solid var(--ln);border-radius:10px;padding:28px;border-top:4px solid var(--ac)}
+.box h1{font-size:1.25rem;margin:0 0 2px}.box p{margin:0 0 18px}
+/* shell */
+#shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+#shell>aside{background:#14212b;color:#d6e0e5;padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+#shell>aside .brand{font-weight:700;font-size:1.05rem;color:#fff;padding:0 8px 18px;line-height:1.25}
+#shell>aside .brand span{display:block;font-weight:400;font-size:.8rem;color:#8fa3ae}
+.nav{background:none;border:0;text-align:left;padding:9px 10px;border-radius:var(--r);color:inherit;cursor:pointer}
+.nav:hover{background:#1f3341}.nav.on{background:#0e6f78;color:#fff}
+.me{margin-top:auto;padding:10px 8px;border-top:1px solid #2a4150;font-size:.85rem}.me b{display:block;color:#fff}
+.me button{margin-top:8px;background:none;border:1px solid #3a5465;color:#d6e0e5;border-radius:var(--r);padding:4px 10px;cursor:pointer}
+main{padding:24px 28px;min-width:0}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:16px}.head h2{margin:0;font-size:1.35rem;margin-right:auto}
+/* pipeline */
+.pipe{display:flex;gap:4px;margin-bottom:6px}
+.seg{min-width:96px;background:var(--pn);border:1px solid var(--ln);border-top:5px solid var(--c);border-radius:var(--r);padding:10px 12px;text-align:left;cursor:pointer;transition:flex .3s}
+.seg.on{box-shadow:0 0 0 2px var(--c)}.seg b{display:block;font-size:1.7rem;line-height:1.1}.seg span{font-size:.82rem;color:var(--mu)}
+.sla{display:flex;gap:18px;margin:0 0 16px;font-size:.86rem;color:var(--mu)}.sla b{color:var(--ink)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.bar input{flex:1 1 200px;width:auto}.bar select{width:auto}
+.panel{background:var(--pn);border:1px solid var(--ln);border-radius:10px;overflow:hidden}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--ln);vertical-align:middle}
+th{font-size:.82rem;color:var(--mu);font-weight:600;background:#f6f8f8;white-space:nowrap}tr:last-child td{border-bottom:0}
+tbody tr.t{cursor:pointer}tbody tr.t:hover{background:#f6fafa}
+.tt{font-weight:600}.tt+div{font-size:.82rem;color:var(--mu)}
+.tag{display:inline-block;padding:1px 9px;border-radius:4px;font-size:.8rem;font-weight:600;background:#e6ebed;color:#3b4b55;white-space:nowrap}
+.p-kritis{background:var(--red);color:#fff}.p-tinggi{background:#fbe6c8;color:#7a4503}.p-rendah{background:#eef1f2;color:var(--mu)}
+.s-open{background:#dfe9f6;color:var(--blu)}.s-in_progress{background:#fbe6c8;color:#7a4503}.s-resolved{background:#d9eee1;color:var(--grn)}.s-closed{background:#e6ebed;color:var(--mu)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.acts select{width:auto;padding:4px 8px;font-size:.84rem}
+.empty{padding:36px;text-align:center;color:var(--mu)}
+/* drawer & dialog */
+#drawer{display:block;color:var(--ink);position:fixed;top:0;right:0;height:100%;width:min(480px,100%);background:var(--pn);border-left:1px solid var(--ln);box-shadow:-12px 0 30px rgba(20,33,43,.15);transform:translateX(105%);transition:transform .22s;overflow:auto;padding:22px;z-index:20}
+#drawer.open{transform:none}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:14px 0;font-size:.9rem}.meta dt{color:var(--mu)}.meta dd{margin:0}
+.kpi{display:flex;gap:10px;margin:14px 0}.kpi div{flex:1;background:var(--bg);border-radius:var(--r);padding:8px 12px}.kpi b{display:block;font-size:1.15rem}
+.tl{list-style:none;margin:10px 0 0;padding:0 0 0 14px;border-left:2px solid var(--ln)}
+.tl li{position:relative;padding:0 0 14px 14px}.tl li:before{content:"";position:absolute;left:-21px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--ac)}
+dialog{border:1px solid var(--ln);border-radius:10px;padding:24px;width:min(480px,94vw);color:var(--ink)}dialog::backdrop{background:rgba(20,33,43,.45)}
+dialog h3{margin:0 0 14px}.dact{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.link{word-break:break-all;background:var(--bg);padding:8px 10px;border-radius:var(--r);font-size:.82rem;margin:8px 0}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);padding:10px 16px;border-radius:var(--r);color:#fff;z-index:50;max-width:92vw}
+#toast.ok{background:var(--grn)}#toast.err{background:var(--red)}
+@media(max-width:780px){
+#shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+#shell>aside{position:sticky;top:0;z-index:10;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px;padding:8px 10px}
+#shell>aside .brand{padding:0 10px 0 4px;font-size:.95rem}#shell>aside .brand span{display:none}
+.nav{padding:8px 12px}.me{margin:0 0 0 auto;border:0;padding:0}.me b,.me span,.me br{display:none}.me button{margin:0}
+main{padding:14px 12px 28px}
+.head{flex-wrap:wrap;gap:8px}.head h2{font-size:1.2rem}
+.pipe{flex-wrap:wrap}.seg{flex:1 1 40%!important;min-width:0}
+.sla{flex-wrap:wrap;gap:4px 16px}
+input,select,textarea{font-size:16px}
+.bar select,.bar .btn{flex:1 1 auto}
+/* tabel menjadi kartu */
+.panel table,.panel tbody{display:block}.panel thead{display:none}
+.panel tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:12px 14px;border-bottom:1px solid var(--ln)}
+.panel tr:last-child{border-bottom:0}.panel td{display:block;padding:0;border:0}
+#rows td:nth-child(1){order:1;color:var(--mu)}#rows td:nth-child(1):before{content:"#"}
+#rows td:nth-child(2){order:2;flex:1 1 calc(100% - 48px);min-width:0}
+#rows td:nth-child(3){order:3}#rows td:nth-child(4){order:4}
+#rows td:nth-child(5){order:5;font-size:.88rem;color:var(--mu)}#rows td:nth-child(5):before{content:"Teknisi: "}
+#rows td:nth-child(6){order:6;width:100%}
+#techRows td:nth-child(1){font-weight:600;flex:1 1 100%}#techRows td:nth-child(2){flex:1 1 100%;color:var(--mu);word-break:break-all}
+#techRows td:nth-child(3){color:var(--mu);font-size:.88rem;margin-right:auto}#techRows td:nth-child(3):before{content:"Tiket aktif: "}
+#invRows td:nth-child(1){font-weight:600;flex:1 1 100%}#invRows td:nth-child(2){flex:1 1 100%;color:var(--mu);word-break:break-all}
+#invRows td:nth-child(3){flex:1 1 100%;font-size:.86rem}#invRows td:nth-child(4){width:100%}
+.acts{width:100%}.acts select{flex:1 1 150px;min-height:36px;font-size:16px}.acts .btn{min-height:36px}
+.btn{min-height:40px}.btn.sm{min-height:36px}
+.g2{grid-template-columns:1fr}
+#drawer{padding:16px;width:100%}.kpi{flex-wrap:wrap}.kpi div{flex:1 1 140px}
+dialog{padding:18px;max-height:92vh;overflow:auto}
+.dact .btn{flex:1}
+#toast{bottom:14px;width:calc(100% - 24px);text-align:center}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<div id="auth">
+  <div class="box" id="loginBox"><h1>Network Incident Ticketing</h1><p class="mu">Masuk untuk mengelola tiket gangguan.</p>
+    <div class="f"><label for="email">Email</label><input id="email" type="email" autocomplete="username"></div>
+    <div class="f"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"></div>
+    <button class="btn" id="loginBtn" style="width:100%">Masuk</button></div>
+  <div class="box hide" id="actBox"><h1>Aktifkan akun</h1><p class="mu" id="actInfo"></p>
+    <div class="f"><label for="a_pass">Buat password (min. 8 karakter)</label><input id="a_pass" type="password" autocomplete="new-password"></div>
+    <div class="f"><label for="a_pass2">Ulangi password</label><input id="a_pass2" type="password" autocomplete="new-password"></div>
+    <button class="btn" id="actBtn" style="width:100%">Aktifkan akun</button></div>
+</div>
+
+<div id="shell" class="hide">
+  <aside>
+    <div class="brand">Network Incident<br>Ticketing<span>Pusat gangguan jaringan</span></div>
+    <button class="nav on" data-view="tiket">Tiket</button>
+    <button class="nav hide" id="navTeam" data-view="teknisi">Teknisi</button>
+    <div class="me"><b id="meName"></b><span id="meRole" class="mu"></span><br><button id="logout">Keluar</button></div>
+  </aside>
+  <main>
+    <section id="vTiket">
+      <div class="head"><h2>Tiket</h2><button class="btn hide" id="newBtn">Tiket baru</button></div>
+      <div class="pipe" id="pipe"></div>
+      <div class="sla hide" id="sla"></div>
+      <div class="bar"><input id="q" type="search" placeholder="Cari judul, pelanggan, perangkat" aria-label="Cari tiket">
+        <select id="fp" aria-label="Filter prioritas"><option value="">Semua prioritas</option><option>kritis</option><option>tinggi</option><option>sedang</option><option>rendah</option></select>
+        <button class="btn sec" id="refreshBtn">Muat ulang</button></div>
+      <div class="panel"><div class="scroll"><table><thead><tr><th>#</th><th>Tiket</th><th>Prioritas</th><th>Status</th><th>Teknisi</th><th>Aksi</th></tr></thead><tbody id="rows"></tbody></table></div>
+        <div class="empty hide" id="empty">Tidak ada tiket yang cocok.</div></div>
+    </section>
+    <section id="vTeknisi" class="hide">
+      <div class="head"><h2>Teknisi</h2><button class="btn" id="inviteBtn">Undang teknisi</button></div>
+      <div class="panel" style="margin-bottom:18px"><div class="scroll"><table><thead><tr><th>Nama</th><th>Email</th><th>Tiket aktif</th><th>Aksi</th></tr></thead><tbody id="techRows"></tbody></table></div></div>
+      <h3 style="margin:0 0 8px">Menunggu aktivasi</h3>
+      <div class="panel"><div class="scroll"><table><thead><tr><th>Nama</th><th>Email</th><th>Tautan</th><th>Aksi</th></tr></thead><tbody id="invRows"></tbody></table></div>
+        <div class="empty hide" id="invEmpty">Tidak ada undangan yang tertunda.</div></div>
+    </section>
+  </main>
+</div>
+
+<aside id="drawer" aria-label="Detail tiket"></aside>
+
+<dialog id="dNew"><h3>Tiket baru</h3>
+  <div class="f"><label for="t_judul">Judul</label><input id="t_judul"></div>
+  <div class="g2"><div class="f"><label for="t_pelanggan">Pelanggan</label><input id="t_pelanggan"></div><div class="f"><label for="t_perangkat">Perangkat</label><input id="t_perangkat"></div></div>
+  <div class="f"><label for="t_lokasi">Lokasi</label><input id="t_lokasi"></div>
+  <div class="g2"><div class="f"><label for="t_jenis">Jenis</label><select id="t_jenis"><option>gangguan</option><option>pemeliharaan</option></select></div>
+    <div class="f"><label for="t_prioritas">Prioritas</label><select id="t_prioritas"><option>rendah</option><option selected>sedang</option><option>tinggi</option><option>kritis</option></select></div></div>
+  <div class="f"><label for="t_deskripsi">Deskripsi (opsional)</label><textarea id="t_deskripsi" rows="3"></textarea></div>
+  <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="createBtn">Simpan tiket</button></div></dialog>
+
+<dialog id="dInv"><h3>Undang teknisi</h3><p class="mu" style="margin-top:-6px">Tautan aktivasi dikirim ke email ini. Teknisi membuat passwordnya sendiri.</p>
+  <div class="f"><label for="i_nama">Nama</label><input id="i_nama"></div>
+  <div class="f"><label for="i_email">Email aktif</label><input id="i_email" type="email"></div>
+  <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="invBtn">Kirim undangan</button></div></dialog>
+
+<dialog id="dLink"><h3>Email belum terkirim</h3><p id="linkNote" class="mu"></p><div class="link" id="linkVal"></div>
+  <div class="dact"><button class="btn sec" data-close>Tutup</button><button class="btn" id="copyBtn">Salin tautan</button></div></dialog>
+
+<dialog id="dSt"><h3 id="stTitle"></h3><div class="f"><label for="st_note">Catatan (opsional)</label><textarea id="st_note" rows="3"></textarea></div>
+  <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="stBtn">Simpan</button></div></dialog>
+<div id="toast" class="hide"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const NEXT={open:["in_progress"],in_progress:["resolved"],resolved:["closed","in_progress"],closed:[]};
+const COL={open:"var(--blu)",in_progress:"var(--amb)",resolved:"var(--grn)",closed:"#8a979f"};
+const ST={open:"Open",in_progress:"In progress",resolved:"Resolved",closed:"Closed"};
+const fmt=m=>m==null?"–":m<60?m+" mnt":Math.floor(m/60)+" j "+(m%60)+" mnt";
+const when=s=>new Date(s+"Z").toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"});
+let token=null,me=null,techs=[],tickets=[],statusF="",pending=null,actToken=null;
+
+function toast(t,ok){const e=$("toast");e.textContent=t;e.className=ok?"ok":"err";clearTimeout(toast.h);toast.h=setTimeout(()=>e.className="hide",ok?2600:5000)}
+async function api(method,path,body){
+  const o={method,headers:{"Content-Type":"application/json"}};
+  if(token)o.headers.Authorization="Bearer "+token;
+  if(body)o.body=JSON.stringify(body);
+  const r=await fetch(path,o),d=await r.json().catch(()=>({}));
+  if(r.status===401&&token){saveSession(null);location.reload();return new Promise(()=>{})}
+  if(!r.ok)throw new Error(d.error||d.msg||"Gagal ("+r.status+")");
+  return d;
+}
+function saveSession(t,u){try{if(t)sessionStorage.setItem("sess",JSON.stringify({t,u}));else sessionStorage.removeItem("sess")}catch(e){}}
+const run=p=>p.catch(e=>toast(e.message,false));
+document.addEventListener("click",e=>{if(e.target.dataset.close!==undefined)e.target.closest("dialog").close()});
+
+/* ---- masuk & aktivasi ---- */
+$("loginBtn").onclick=()=>run((async()=>{
+  const d=await api("POST","/auth/login",{email:$("email").value,password:$("password").value});
+  token=d.access_token;me=d.user;saveSession(token,me);enter();
+})());
+$("password").onkeydown=e=>{if(e.key==="Enter")$("loginBtn").click()};
+$("logout").onclick=()=>{saveSession(null);location.reload()};
+async function checkActivation(){
+  actToken=new URLSearchParams(location.search).get("aktivasi");
+  if(!actToken)return;
+  try{const d=await api("GET","/auth/invite/"+encodeURIComponent(actToken));
+    $("actInfo").innerHTML="Halo "+esc(d.nama)+", buat password untuk <b>"+esc(d.email)+"</b>.";
+    $("loginBox").classList.add("hide");$("actBox").classList.remove("hide");$("email").value=d.email;
+  }catch(e){toast(e.message,false);history.replaceState(null,"","/ui");actToken=null}
+}
+$("actBtn").onclick=()=>run((async()=>{
+  if($("a_pass").value!==$("a_pass2").value)throw new Error("Password dan pengulangannya tidak sama");
+  await api("POST","/auth/activate",{token:actToken,password:$("a_pass").value});
+  history.replaceState(null,"","/ui");$("actBox").classList.add("hide");$("loginBox").classList.remove("hide");
+  toast("Akun aktif. Silakan masuk dengan password baru Anda.",true);$("password").focus();
+})());
+
+function enter(){
+  const admin=me.role==="admin";
+  $("auth").classList.add("hide");$("shell").classList.remove("hide");
+  $("meName").textContent=me.nama;$("meRole").textContent=me.role;
+  ["navTeam","newBtn","sla"].forEach(i=>$(i).classList.toggle("hide",!admin));
+  run(load());
+}
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".nav").forEach(n=>n.classList.toggle("on",n===b));
+  $("vTiket").classList.toggle("hide",b.dataset.view!=="tiket");$("vTeknisi").classList.toggle("hide",b.dataset.view!=="teknisi");
+  if(b.dataset.view==="teknisi")run(loadTeam());
+});
+
+/* ---- tiket ---- */
+async function load(){
+  if(me.role==="admin")techs=await api("GET","/users?role=teknisi");
+  tickets=(await api("GET","/tickets?per_page=100")).data;
+  renderPipe();renderRows();
+  if(me.role==="admin"){const s=await api("GET","/tickets/summary");
+    $("sla").innerHTML="<span>Rata-rata respons <b class='num'>"+fmt(s.rata_rata_respons_menit)+"</b></span><span>Rata-rata penyelesaian <b class='num'>"+fmt(s.rata_rata_penyelesaian_menit)+"</b></span>";}
+}
+function renderPipe(){
+  const n={open:0,in_progress:0,resolved:0,closed:0};tickets.forEach(t=>n[t.status]++);
+  $("pipe").innerHTML=Object.keys(n).map(k=>`<button class="seg${statusF===k?" on":""}" data-s="${k}" style="--c:${COL[k]};flex:${Math.max(n[k],.7)}"><b class="num">${n[k]}</b><span>${ST[k]}</span></button>`).join("");
+}
+$("pipe").onclick=e=>{const b=e.target.closest(".seg");if(!b)return;statusF=statusF===b.dataset.s?"":b.dataset.s;renderPipe();renderRows()};
+const techName=id=>{if(id==null)return "–";const u=techs.find(x=>x.id===id);return u?esc(u.nama):"#"+id};
+function renderRows(){
+  const q=$("q").value.toLowerCase(),fp=$("fp").value;
+  const list=tickets.filter(t=>(!statusF||t.status===statusF)&&(!fp||t.prioritas===fp)&&(!q||[t.judul,t.pelanggan,t.perangkat,t.lokasi].join(" ").toLowerCase().includes(q)));
+  $("empty").classList.toggle("hide",list.length>0);
+  $("rows").innerHTML=list.map(t=>{
+    let a="";
+    if(me.role==="admin"&&(t.status==="open"||t.status==="in_progress"))
+      a+=`<select id="as${t.id}" aria-label="Tugaskan"><option value="">Tugaskan…</option>${techs.map(u=>`<option value="${u.id}"${u.id===t.ditugaskan_ke?" selected":""}>${esc(u.nama)}</option>`).join("")}</select><button class="btn sm" data-assign="${t.id}">Tugaskan</button>`;
+    NEXT[t.status].forEach(s=>{if(s==="closed"&&me.role!=="admin")return;
+      a+=`<button class="btn sm sec" data-st="${t.id}|${s}">${t.status==="resolved"&&s==="in_progress"?"Buka lagi":"Jadikan "+ST[s]}</button>`});
+    return `<tr class="t" data-d="${t.id}"><td class="num">${t.id}</td><td><div class="tt">${esc(t.judul)}</div><div>${esc(t.pelanggan)} · ${esc(t.jenis)}${t.perangkat?" · "+esc(t.perangkat):""}</div></td>
+      <td><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span></td><td><span class="tag s-${esc(t.status)}">${ST[t.status]}</span></td><td>${techName(t.ditugaskan_ke)}</td><td><div class="acts">${a}</div></td></tr>`}).join("");
+}
+["q","fp"].forEach(i=>$(i).oninput=renderRows);$("refreshBtn").onclick=()=>run(load());
+$("rows").onclick=e=>{
+  const a=e.target.closest("[data-assign]"),s=e.target.closest("[data-st]"),sel=e.target.closest("select");
+  if(sel)return;
+  if(a){const v=$("as"+a.dataset.assign).value;if(!v)return toast("Pilih teknisi dulu",false);
+    run(api("PUT","/tickets/"+a.dataset.assign+"/assign",{teknisi_id:+v}).then(()=>{toast("Tiket ditugaskan",true);return load()}))}
+  else if(s){const[id,st]=s.dataset.st.split("|");pending={id,st};$("stTitle").textContent="Ubah status ke "+ST[st];$("st_note").value="";$("dSt").showModal()}
+  else{const r=e.target.closest("tr[data-d]");if(r)run(openDetail(r.dataset.d))}
+};
+$("stBtn").onclick=()=>run(api("PUT","/tickets/"+pending.id+"/status",{status:pending.st,catatan:$("st_note").value}).then(()=>{$("dSt").close();toast("Status diubah ke "+ST[pending.st],true);return load()}));
+async function openDetail(id){
+  const t=await api("GET","/tickets/"+id);
+  $("drawer").innerHTML=`<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><button class="btn sm sec" id="dclose">Tutup</button></div>
+   <h2 style="margin:8px 0">${esc(t.judul)}</h2><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span> <span class="tag s-${esc(t.status)}">${ST[t.status]}</span>
+   <p class="mu">${esc(t.deskripsi||"Tanpa deskripsi")}</p>
+   <dl class="meta"><dt>Pelanggan</dt><dd>${esc(t.pelanggan)}</dd><dt>Jenis</dt><dd>${esc(t.jenis)}</dd><dt>Perangkat</dt><dd>${esc(t.perangkat||"–")}</dd><dt>Lokasi</dt><dd>${esc(t.lokasi||"–")}</dd><dt>Teknisi</dt><dd>${techName(t.ditugaskan_ke)}</dd><dt>Dibuat</dt><dd>${when(t.created_at)}</dd></dl>
+   <div class="kpi"><div><span class="mu">Waktu respons</span><b class="num">${fmt(t.sla.respons_menit)}</b></div><div><span class="mu">Waktu penyelesaian</span><b class="num">${fmt(t.sla.penyelesaian_menit)}</b></div></div>
+   <h3 style="margin:18px 0 4px">Riwayat</h3>`+(t.logs.length?`<ul class="tl">${t.logs.map(l=>`<li><b>${ST[l.status_lama]} → ${ST[l.status_baru]}</b><div class="mu">${when(l.waktu)}</div>${l.catatan?`<div>${esc(l.catatan)}</div>`:""}</li>`).join("")}</ul>`:`<p class="mu">Belum ada perubahan status.</p>`);
+  $("drawer").classList.add("open");$("dclose").onclick=()=>$("drawer").classList.remove("open");
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("drawer").classList.remove("open")});
+$("newBtn").onclick=()=>$("dNew").showModal();
+$("createBtn").onclick=()=>run(api("POST","/tickets",{judul:$("t_judul").value,pelanggan:$("t_pelanggan").value,perangkat:$("t_perangkat").value,lokasi:$("t_lokasi").value,jenis:$("t_jenis").value,prioritas:$("t_prioritas").value,deskripsi:$("t_deskripsi").value}).then(()=>{
+  $("dNew").close();["t_judul","t_pelanggan","t_perangkat","t_lokasi","t_deskripsi"].forEach(i=>$(i).value="");toast("Tiket dibuat",true);return load()}));
+
+/* ---- teknisi & undangan ---- */
+async function loadTeam(){
+  techs=await api("GET","/users?role=teknisi");const inv=await api("GET","/users/invitations");
+  const aktif=id=>tickets.filter(t=>t.ditugaskan_ke===id&&(t.status==="open"||t.status==="in_progress")).length;
+  $("techRows").innerHTML=techs.length?techs.map(u=>`<tr><td>${esc(u.nama)}</td><td>${esc(u.email)}</td><td class="num">${aktif(u.id)}</td><td><button class="btn sm dng" data-ut="${u.id}" data-n="${esc(u.nama)}">Hapus</button></td></tr>`).join(""):`<tr><td colspan="4" class="mu">Belum ada teknisi. Klik "Undang teknisi" untuk menambahkan.</td></tr>`;
+  $("invEmpty").classList.toggle("hide",inv.length>0);
+  $("invRows").innerHTML=inv.map(i=>`<tr><td>${esc(i.nama)}</td><td>${esc(i.email)}</td><td>${i.kedaluwarsa?'<span class="tag s-closed">Kedaluwarsa</span>':"Berlaku s.d. "+when(i.expires_at)}</td>
+    <td><div class="acts"><button class="btn sm sec" data-re="${i.id}" data-n="${esc(i.nama)}" data-e="${esc(i.email)}">Kirim ulang</button><button class="btn sm dng" data-del="${i.id}">Batalkan</button></div></td></tr>`).join("");
+}
+function sendInvite(nama,email){return api("POST","/users/invite",{nama,email}).then(d=>{
+  if(d.email_terkirim)toast("Undangan dikirim ke "+d.email,true);
+  else{$("linkNote").textContent=d.catatan;$("linkVal").textContent=d.link_aktivasi;$("dLink").showModal()}
+  return loadTeam()})}
+$("inviteBtn").onclick=()=>{$("i_nama").value="";$("i_email").value="";$("dInv").showModal()};
+$("invBtn").onclick=()=>run(sendInvite($("i_nama").value,$("i_email").value).then(()=>$("dInv").close()));
+$("invRows").onclick=e=>{const r=e.target.closest("[data-re]"),d=e.target.closest("[data-del]");
+  if(r)run(sendInvite(r.dataset.n,r.dataset.e));
+  if(d&&confirm("Batalkan undangan ini?"))run(api("DELETE","/users/invitations/"+d.dataset.del).then(()=>{toast("Undangan dibatalkan",true);return loadTeam()}))};
+$("techRows").onclick=e=>{const b=e.target.closest("[data-ut]");
+  if(b&&confirm("Hapus teknisi "+b.dataset.n+"? Tiket yang ditugaskan kepadanya menjadi belum ditugaskan."))
+    run(api("DELETE","/users/"+b.dataset.ut).then(()=>{toast("Teknisi dihapus",true);return load().then(loadTeam)}))};
+$("copyBtn").onclick=()=>navigator.clipboard.writeText($("linkVal").textContent).then(()=>toast("Tautan disalin",true));
+checkActivation();
+try{const sv=JSON.parse(sessionStorage.getItem("sess")||"null");
+  if(sv&&sv.t&&!new URLSearchParams(location.search).get("aktivasi")){token=sv.t;me=sv.u;enter()}}catch(e){}
+</script></body></html>
