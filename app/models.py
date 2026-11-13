@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -9,6 +9,8 @@ TICKET_TYPES = ("gangguan", "pemeliharaan")
 PRIORITIES = ("rendah", "sedang", "tinggi", "kritis")
 PRIORITY_RANK = {name: i for i, name in enumerate(PRIORITIES)}
 STATUSES = ("open", "in_progress", "resolved", "closed")
+RECURRENCE_TYPES = ("tidak_ada", "harian", "mingguan", "bulanan")
+SCHEDULE_STATUSES = ("terjadwal", "selesai", "dibatalkan")
 
 DEFAULT_SLA_TARGETS = {
     "kritis": {"respons_menit": 60, "penyelesaian_menit": 240},
@@ -402,3 +404,88 @@ class SlaTarget(db.Model):
                 db.session.commit()
         except Exception:
             db.session.rollback()
+
+
+class MaintenanceSchedule(db.Model):
+    __tablename__ = "maintenance_schedules"
+
+    id = db.Column(db.Integer, primary_key=True)
+    judul = db.Column(db.String(150), nullable=False)
+    deskripsi = db.Column(db.Text, default="")
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=True, index=True)
+    pelanggan = db.Column(db.String(150), default="")
+    device_id = db.Column(db.Integer, db.ForeignKey("devices.id"), nullable=True, index=True)
+    perangkat = db.Column(db.String(150), default="")
+    lokasi = db.Column(db.String(200), default="")
+    prioritas = db.Column(db.String(20), nullable=False, default="sedang")
+    tanggal_rencana = db.Column(db.DateTime, nullable=False)
+    pengulangan = db.Column(db.String(20), nullable=False, default="tidak_ada")
+    status = db.Column(db.String(20), nullable=False, default="terjadwal", index=True)
+    last_ticket_id = db.Column(db.Integer, db.ForeignKey("tickets.id"), nullable=True)
+    dibuat_oleh = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+
+    # Relationship
+    customer = db.relationship("Customer", backref="maintenance_schedules")
+    device = db.relationship("Device", backref="maintenance_schedules")
+    creator = db.relationship("User", foreign_keys=[dibuat_oleh], backref="maintenance_schedules")
+    last_ticket = db.relationship("Ticket", foreign_keys=[last_ticket_id])
+
+    def __init__(self, judul="", deskripsi="", customer_id=None, pelanggan="", device_id=None,
+                 perangkat="", lokasi="", prioritas="sedang", tanggal_rencana=None,
+                 pengulangan="tidak_ada", status="terjadwal", last_ticket_id=None,
+                 dibuat_oleh=None, created_at=None, **kwargs):
+        super().__init__(**kwargs)
+        self.judul = judul
+        self.deskripsi = deskripsi
+        self.customer_id = customer_id
+        self.pelanggan = pelanggan
+        self.device_id = device_id
+        self.perangkat = perangkat
+        self.lokasi = lokasi
+        self.prioritas = prioritas
+        self.tanggal_rencana = tanggal_rencana or utcnow()
+        self.pengulangan = pengulangan
+        self.status = status
+        self.last_ticket_id = last_ticket_id
+        if dibuat_oleh is not None:
+            self.dibuat_oleh = dibuat_oleh
+        if created_at is not None:
+            self.created_at = created_at
+
+    def is_overdue(self):
+        if self.status != "terjadwal" or self.tanggal_rencana is None:
+            return False
+        return self.tanggal_rencana < utcnow()
+
+    def advance_recurrence(self):
+        """Memajukan tanggal_rencana jika berulang, atau menandai selesai jika tidak berulang."""
+        if self.pengulangan == "harian":
+            self.tanggal_rencana += timedelta(days=1)
+        elif self.pengulangan == "mingguan":
+            self.tanggal_rencana += timedelta(weeks=1)
+        elif self.pengulangan == "bulanan":
+            self.tanggal_rencana += timedelta(days=30)
+        else:
+            self.status = "selesai"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "judul": self.judul,
+            "deskripsi": self.deskripsi or "",
+            "customer_id": self.customer_id,
+            "pelanggan": self.pelanggan or (self.customer.nama if self.customer else ""),
+            "device_id": self.device_id,
+            "perangkat": self.perangkat or (self.device.nama if self.device else ""),
+            "lokasi": self.lokasi or "",
+            "prioritas": self.prioritas,
+            "tanggal_rencana": self.tanggal_rencana.isoformat() if self.tanggal_rencana else None,
+            "pengulangan": self.pengulangan,
+            "status": self.status,
+            "jatuh_tempo": self.is_overdue(),
+            "last_ticket_id": self.last_ticket_id,
+            "dibuat_oleh": self.dibuat_oleh,
+            "nama_pembuat": self.creator.nama if self.creator else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

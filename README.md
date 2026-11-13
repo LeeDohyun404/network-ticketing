@@ -22,13 +22,15 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 
 **customers**: id, nama, alamat, kontak, created_at
 
-**devices**: id, nama, jenis, lokasi, customer_id (id customer), created_at
+**devices**: id, nama, jenis, lokasi, customer_id (id customer, nullable), created_at
 
 **tickets**: id, judul, deskripsi, pelanggan, customer_id (nullable), jenis (`gangguan` atau `pemeliharaan`), perangkat, device_id (nullable), lokasi, prioritas (`rendah`, `sedang`, `tinggi`, `kritis`), status, dibuat_oleh (id user), ditugaskan_ke (id user), created_at, responded_at, resolved_at
 
 **ticket_logs**: id, ticket_id, aksi (`status`, `penugasan`, `prioritas`, `edit`), field_diubah, nilai_lama, nilai_baru, status_lama, status_baru, diubah_oleh (id user), catatan, waktu
 
 **ticket_comments**: id, ticket_id, dibuat_oleh (id user), pesan, created_at
+
+**maintenance_schedules**: id, judul, deskripsi, customer_id (nullable), pelanggan, device_id (nullable), perangkat, lokasi, prioritas, tanggal_rencana, pengulangan (`tidak_ada`, `harian`, `mingguan`, `bulanan`), status (`terjadwal`, `selesai`, `dibatalkan`), last_ticket_id (nullable), dibuat_oleh (id user), created_at
 
 **sla_targets**: id, prioritas (`kritis`, `tinggi`, `sedang`, `rendah` - unik), target_respons_menit, target_penyelesaian_menit
 
@@ -79,6 +81,12 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 | GET | /devices/<id> | login | Detail perangkat |
 | PUT | /devices/<id> | admin | Ubah informasi perangkat |
 | DELETE | /devices/<id> | admin | Hapus perangkat (hanya jika tanpa tiket aktif) |
+| POST | /maintenance-schedules | admin | Buat jadwal pemeliharaan preventif baru |
+| GET | /maintenance-schedules | login | Daftar jadwal pemeliharaan (`?status=`, `?jatuh_tempo=`, `?q=`) |
+| GET | /maintenance-schedules/<id> | login | Detail jadwal pemeliharaan |
+| PUT | /maintenance-schedules/<id> | admin | Ubah rincian / batalkan jadwal pemeliharaan |
+| POST | /maintenance-schedules/<id>/generate-ticket | admin | Buat tiket kerja pemeliharaan (otomatis memajukan pengulangan) |
+| DELETE | /maintenance-schedules/<id> | admin | Hapus jadwal pemeliharaan |
 
 Header untuk endpoint terlindungi: `Authorization: Bearer <token>`.
 

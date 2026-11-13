@@ -23,3 +23,4 @@ def upgrade():
 def downgrade():
     with op.batch_alter_table('devices', schema=None) as batch_op:
         batch_op.alter_column('customer_id', existing_type=sa.Integer(), nullable=False)
+

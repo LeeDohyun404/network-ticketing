@@ -53,10 +53,12 @@ def create_app(test_config=None):
     from .routes.auth import bp as auth_bp
     from .routes.tickets import bp as tickets_bp
     from .routes.customers import bp as customers_bp
+    from .routes.maintenance import bp as maintenance_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tickets_bp)
     app.register_blueprint(customers_bp)
+    app.register_blueprint(maintenance_bp)
 
     @app.get("/")
     def index():
@@ -103,6 +105,26 @@ def create_app(test_config=None):
                 conn.execute(db.text("ALTER TABLE ticket_logs ADD COLUMN IF NOT EXISTS nilai_baru TEXT;"))
                 # Kolom devices: customer_id nullable (untuk perangkat infrastruktur mandiri)
                 conn.execute(db.text("ALTER TABLE devices ALTER COLUMN customer_id DROP NOT NULL;"))
+                # Tabel maintenance_schedules (Fitur 5)
+                conn.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS maintenance_schedules (
+                        id SERIAL PRIMARY KEY,
+                        judul VARCHAR(150) NOT NULL,
+                        deskripsi TEXT,
+                        customer_id INTEGER REFERENCES customers(id),
+                        pelanggan VARCHAR(150),
+                        device_id INTEGER REFERENCES devices(id),
+                        perangkat VARCHAR(150),
+                        lokasi VARCHAR(200),
+                        prioritas VARCHAR(20) NOT NULL DEFAULT 'sedang',
+                        tanggal_rencana TIMESTAMP NOT NULL,
+                        pengulangan VARCHAR(20) NOT NULL DEFAULT 'tidak_ada',
+                        status VARCHAR(20) NOT NULL DEFAULT 'terjadwal',
+                        last_ticket_id INTEGER REFERENCES tickets(id),
+                        dibuat_oleh INTEGER NOT NULL REFERENCES users(id),
+                        created_at TIMESTAMP NOT NULL
+                    );
+                """))
                 conn.commit()
         except Exception:
             pass
