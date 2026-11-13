@@ -36,3 +36,4 @@ def downgrade():
     with op.batch_alter_table('ticket_comments', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_ticket_comments_ticket_id'))
     op.drop_table('ticket_comments')
+

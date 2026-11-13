@@ -143,16 +143,20 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
 <aside id="drawer" aria-label="Detail tiket"></aside>
 
 <dialog id="dNew"><h3>Tiket baru</h3>
-  <div class="f"><label for="t_judul">Judul</label><input id="t_judul"></div>
-  <div class="g2">
-    <div class="f"><label for="t_cust">Pilih Pelanggan Terdaftar</label><select id="t_cust"><option value="">– Ketik manual atau pilih –</option></select></div>
-    <div class="f"><label for="t_dev">Pilih Perangkat</label><select id="t_dev"><option value="">– Pilih perangkat –</option></select></div>
+  <div class="f"><label for="t_judul">Judul Gangguan / Masalah</label><input id="t_judul" placeholder="Contoh: Kabel FO Putus / Redaman Tinggi"></div>
+  <div style="background:var(--s2);padding:10px 12px;border-radius:6px;margin:8px 0 12px;font-size:.82rem;color:var(--mu);line-height:1.4">
+    💡 <b>Opsi 1 (Otomatis):</b> Pilih dari master pelanggan & perangkat jika sudah terdaftar, ATAU<br>
+    ✍️ <b>Opsi 2 (Ketik Bebas):</b> Langsung ketik manual di kolom <b>Nama Pelanggan</b>, <b>Perangkat</b> (misal: <i>ONT, OLT, Tiang FO, ODP</i>), dan <b>Lokasi</b> di bawah.
   </div>
-  <div class="g2"><div class="f"><label for="t_pelanggan">Nama Pelanggan</label><input id="t_pelanggan"></div><div class="f"><label for="t_perangkat">Nama Perangkat</label><input id="t_perangkat"></div></div>
-  <div class="f"><label for="t_lokasi">Lokasi</label><input id="t_lokasi"></div>
+  <div class="g2">
+    <div class="f"><label for="t_cust">Pilih Master Pelanggan (opsional)</label><select id="t_cust"><option value="">– Ketik manual bebas di bawah –</option></select></div>
+    <div class="f"><label for="t_dev">Pilih Master Perangkat (opsional)</label><select id="t_dev"><option value="">– Pilih perangkat –</option></select></div>
+  </div>
+  <div class="g2"><div class="f"><label for="t_pelanggan">Nama Pelanggan / Instansi *</label><input id="t_pelanggan" placeholder="Contoh: SMA Negeri 1 Songgom / Tiang Publik" required></div><div class="f"><label for="t_perangkat">Nama / Jenis Perangkat (bebas ketik)</label><input id="t_perangkat" placeholder="Contoh: Tiang FO P12, ONT ZTE, ODP, Kabel"></div></div>
+  <div class="f"><label for="t_lokasi">Titik Lokasi Gangguan</label><input id="t_lokasi" placeholder="Contoh: Jl. Raya Songgom Km 3 / Ruang Lab Komputer"></div>
   <div class="g2"><div class="f"><label for="t_jenis">Jenis</label><select id="t_jenis"><option>gangguan</option><option>pemeliharaan</option></select></div>
     <div class="f"><label for="t_prioritas">Prioritas</label><select id="t_prioritas"><option>rendah</option><option selected>sedang</option><option>tinggi</option><option>kritis</option></select></div></div>
-  <div class="f"><label for="t_deskripsi">Deskripsi (opsional)</label><textarea id="t_deskripsi" rows="3"></textarea></div>
+  <div class="f"><label for="t_deskripsi">Deskripsi Masalah (opsional)</label><textarea id="t_deskripsi" rows="3" placeholder="Jelaskan detail kendala jaringan..."></textarea></div>
   <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="createBtn">Simpan tiket</button></div></dialog>
 
 <dialog id="dInv"><h3>Undang teknisi</h3><p class="mu" style="margin-top:-6px">Tautan aktivasi dikirim ke email ini. Teknisi membuat passwordnya sendiri.</p>
@@ -173,9 +177,24 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
   <input type="hidden" id="dev_cid">
   <div class="f"><label for="dev_nama">Nama Perangkat</label><input id="dev_nama" placeholder="Contoh: Router Utama Mikrotik" required></div>
   <div class="g2">
-    <div class="f"><label for="dev_jenis">Jenis</label><select id="dev_jenis"><option>router</option><option>switch</option><option>access_point</option><option>modem</option><option>server</option></select></div>
-    <div class="f"><label for="dev_lokasi">Lokasi Spesifik</label><input id="dev_lokasi" placeholder="Ruang Server Lt. 2"></div>
+    <div class="f"><label for="dev_jenis">Jenis</label>
+      <select id="dev_jenis">
+        <option value="ont">ONT / ONU</option>
+        <option value="olt">OLT</option>
+        <option value="odp">ODP / Closure / FAT</option>
+        <option value="tiang_fo">Kabel / Tiang FO</option>
+        <option value="router">Router</option>
+        <option value="switch">Switch</option>
+        <option value="access_point">Access Point</option>
+        <option value="converter">Media Converter / SFP</option>
+        <option value="modem">Modem</option>
+        <option value="server">Server</option>
+        <option value="lainnya">Lainnya (Ketik sendiri)</option>
+      </select>
+    </div>
+    <div class="f"><label for="dev_lokasi">Lokasi Spesifik / Titik Koordinat</label><input id="dev_lokasi" placeholder="Misal: Tiang P12 Jl. Songgom / R. Server"></div>
   </div>
+  <div class="f hide" id="f_dev_custom"><label for="dev_jenis_custom">Nama Jenis Perangkat Lainnya</label><input id="dev_jenis_custom" placeholder="Contoh: Radio Wireless / Rectifier"></div>
   <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="saveDevBtn">Simpan Perangkat</button></div></dialog>
 
 <dialog id="dSt"><h3 id="stTitle"></h3><div class="f"><label for="st_note">Catatan (opsional)</label><textarea id="st_note" rows="3"></textarea></div>
@@ -332,7 +351,7 @@ async function openDetail(id){
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$("drawer").classList.remove("open")});
 $("newBtn").onclick=async()=>{
-  $("t_cust").innerHTML='<option value="">– Ketik manual atau pilih –</option>'+customersList.map(c=>`<option value="${c.id}">${esc(c.nama)}</option>`).join("");
+  $("t_cust").innerHTML='<option value="">– Ketik manual bebas di bawah –</option>'+customersList.map(c=>`<option value="${c.id}">${esc(c.nama)}</option>`).join("");
   $("t_dev").innerHTML='<option value="">– Pilih perangkat –</option>';
   $("dNew").showModal();
 };
@@ -426,18 +445,22 @@ $("custRows").onclick=e=>{
   if(addDev){
     $("devCustName").textContent=addDev.dataset.cname;
     $("dev_cid").value=addDev.dataset.devlist;
-    $("dev_nama").value="";$("dev_lokasi").value="";
+    $("dev_nama").value="";$("dev_lokasi").value="";$("dev_jenis").value="ont";
+    $("dev_jenis_custom").value="";$("f_dev_custom").classList.add("hide");
     $("dDev").showModal();
   }
   if(del&&confirm("Hapus pelanggan "+del.dataset.cname+"?")){
     run(api("DELETE","/customers/"+del.dataset.delcust).then(()=>{toast("Pelanggan dihapus",true);return loadCustomersView()}));
   }
 };
+$("dev_jenis").onchange=()=>{$("f_dev_custom").classList.toggle("hide",$("dev_jenis").value!=="lainnya")};
 $("saveDevBtn").onclick=()=>run((async()=>{
   const cid=+$("dev_cid").value;
   const nama=$("dev_nama").value.trim();
   if(!nama)throw new Error("Nama perangkat wajib diisi");
-  await api("POST","/devices",{customer_id:cid,nama,jenis:$("dev_jenis").value,lokasi:$("dev_lokasi").value.trim()});
+  let j=$("dev_jenis").value;
+  if(j==="lainnya"){j=$("dev_jenis_custom").value.trim()||"lainnya"}
+  await api("POST","/devices",{customer_id:cid,nama,jenis:j,lokasi:$("dev_lokasi").value.trim()});
   $("dDev").close();
   toast("Perangkat berhasil ditambahkan",true);
   return loadCustomersView();
