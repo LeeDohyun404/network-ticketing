@@ -87,12 +87,24 @@ def create_app(test_config=None):
         return error("Token sudah kedaluwarsa, silakan login ulang", 401)
 
     with app.app_context():
-        # Otomatis jalankan migrasi database saat startup (sangat penting untuk Postgres Wasmer)
+        # Buat tabel yang belum ada
+        db.create_all()
+
+        # Pastikan kolom-kolom baru pada tabel lama (Postgres Wasmer) otomatis ditambahkan jika belum ada
         try:
-            from flask_migrate import upgrade as flask_migrate_upgrade
-            flask_migrate_upgrade()
+            with db.engine.connect() as conn:
+                # Kolom tickets: customer_id, device_id
+                conn.execute(db.text("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS customer_id INTEGER REFERENCES customers(id);"))
+                conn.execute(db.text("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS device_id INTEGER REFERENCES devices(id);"))
+                # Kolom ticket_logs: aksi, field_diubah, nilai_lama, nilai_baru
+                conn.execute(db.text("ALTER TABLE ticket_logs ADD COLUMN IF NOT EXISTS aksi VARCHAR(50) DEFAULT 'status';"))
+                conn.execute(db.text("ALTER TABLE ticket_logs ADD COLUMN IF NOT EXISTS field_diubah VARCHAR(50);"))
+                conn.execute(db.text("ALTER TABLE ticket_logs ADD COLUMN IF NOT EXISTS nilai_lama TEXT;"))
+                conn.execute(db.text("ALTER TABLE ticket_logs ADD COLUMN IF NOT EXISTS nilai_baru TEXT;"))
+                conn.commit()
         except Exception:
-            db.create_all()
+            pass
+
         from .models import SlaTarget
         SlaTarget.seed_defaults()
 
