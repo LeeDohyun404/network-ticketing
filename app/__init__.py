@@ -52,9 +52,11 @@ def create_app(test_config=None):
     from . import models  # noqa: F401  (agar model terdaftar)
     from .routes.auth import bp as auth_bp
     from .routes.tickets import bp as tickets_bp
+    from .routes.customers import bp as customers_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tickets_bp)
+    app.register_blueprint(customers_bp)
 
     @app.get("/")
     def index():
@@ -86,5 +88,7 @@ def create_app(test_config=None):
 
     with app.app_context():
         db.create_all()
+        from .models import SlaTarget
+        SlaTarget.seed_defaults()
 
     return app

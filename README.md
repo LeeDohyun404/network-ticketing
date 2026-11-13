@@ -20,9 +20,15 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 
 **users**: id, nama, email (unik), password_hash, role (`admin` atau `teknisi`)
 
-**tickets**: id, judul, deskripsi, pelanggan, jenis (`gangguan` atau `pemeliharaan`), perangkat, lokasi, prioritas (`rendah`, `sedang`, `tinggi`, `kritis`), status, dibuat_oleh (id user), ditugaskan_ke (id user), created_at, responded_at, resolved_at
+**customers**: id, nama, alamat, kontak, created_at
 
-**ticket_logs**: id, ticket_id, status_lama, status_baru, diubah_oleh (id user), catatan, waktu
+**devices**: id, nama, jenis, lokasi, customer_id (id customer), created_at
+
+**tickets**: id, judul, deskripsi, pelanggan, customer_id (nullable), jenis (`gangguan` atau `pemeliharaan`), perangkat, device_id (nullable), lokasi, prioritas (`rendah`, `sedang`, `tinggi`, `kritis`), status, dibuat_oleh (id user), ditugaskan_ke (id user), created_at, responded_at, resolved_at
+
+**ticket_logs**: id, ticket_id, aksi (`status`, `penugasan`, `prioritas`, `edit`), field_diubah, nilai_lama, nilai_baru, status_lama, status_baru, diubah_oleh (id user), catatan, waktu
+
+**sla_targets**: id, prioritas (`kritis`, `tinggi`, `sedang`, `rendah` - unik), target_respons_menit, target_penyelesaian_menit
 
 `ticket_logs` dipisah dari `tickets` karena satu tiket bisa berubah status berkali-kali, dan tiap perubahan butuh satu baris catatan sendiri.
 
@@ -32,7 +38,12 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 - Alur status: `open` → `in_progress` → `resolved` → `closed`. Status tidak boleh loncat. Tiket `resolved` boleh dibuka lagi ke `in_progress` kalau belum tuntas.
 - Admin: membuat, mengubah, menghapus (hanya tiket `open`), dan menugaskan tiket; menutup tiket; melihat ringkasan; membuat akun.
 - Teknisi: hanya melihat tiket yang ditugaskan kepadanya, dan mengubah status `open` → `in_progress` → `resolved` beserta catatan.
-- SLA: waktu respons = `responded_at` dikurangi `created_at`; waktu penyelesaian = `resolved_at` dikurangi `created_at` (dalam menit).
+- SLA: Tiap prioritas memiliki target respons dan penyelesaian (menit):
+  - `kritis`: respons 60 menit, penyelesaian 240 menit (4 jam)
+  - `tinggi`: respons 120 menit, penyelesaian 480 menit (8 jam)
+  - `sedang`: respons 240 menit, penyelesaian 1440 menit (24 jam)
+  - `rendah`: respons 480 menit, penyelesaian 4320 menit (72 jam)
+  Target ini disimpan di tabel `sla_targets` dan dapat disesuaikan oleh admin. Tiket menampilkan durasi, sisa waktu, serta indikator pelanggaran SLA respons dan penyelesaian secara terpisah.
 - Daftar tiket diurutkan dari prioritas tertinggi, lalu yang paling lama menunggu.
 
 ## Daftar endpoint
@@ -44,13 +55,26 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 | GET | /auth/me | login | Data akun sendiri |
 | GET | /users | admin | Daftar user (`?role=teknisi`) |
 | POST | /tickets | admin | Buat tiket |
-| GET | /tickets | login | Daftar tiket (`?status=`, `?prioritas=`, `?jenis=`, `?page=`) |
-| GET | /tickets/summary | admin | Jumlah per status dan rata-rata SLA |
-| GET | /tickets/<id> | admin atau teknisi yang ditugaskan | Detail beserta riwayat |
+| GET | /tickets | login | Daftar tiket (`?status=`, `?prioritas=`, `?jenis=`, `?melewati_sla=`, `?page=`) |
+| GET | /tickets/summary | admin | Statistik status, rata-rata durasi, jumlah pelanggaran, dan persentase kepatuhan SLA |
+| GET | /tickets/<id> | admin atau teknisi yang ditugaskan | Detail beserta riwayat dan evaluasi SLA |
+| GET | /tickets/<id>/logs | admin atau teknisi yang ditugaskan | Riwayat audit tiket (`?aksi=`, `?diubah_oleh=`) |
 | PUT | /tickets/<id> | admin | Ubah data tiket |
 | DELETE | /tickets/<id> | admin | Hapus tiket berstatus open |
 | PUT | /tickets/<id>/assign | admin | Tugaskan ke teknisi (`{"teknisi_id": 2}`) |
 | PUT | /tickets/<id>/status | admin atau teknisi yang ditugaskan | Ubah status (`{"status": "...", "catatan": "..."}`) |
+| GET | /sla-targets | login | Ambil daftar target SLA per prioritas |
+| PUT | /sla-targets/<prioritas> | admin | Perbarui batas waktu respons dan penyelesaian SLA |
+| POST | /customers | admin | Tambah pelanggan baru |
+| GET | /customers | login | Daftar pelanggan (`?q=`) |
+| GET | /customers/<id> | login | Detail pelanggan beserta daftar perangkat |
+| PUT | /customers/<id> | admin | Ubah data pelanggan |
+| DELETE | /customers/<id> | admin | Hapus pelanggan (hanya jika tanpa tiket aktif) |
+| POST | /devices | admin | Tambah perangkat pelanggan baru |
+| GET | /devices | login | Daftar perangkat (`?customer_id=`, `?q=`) |
+| GET | /devices/<id> | login | Detail perangkat |
+| PUT | /devices/<id> | admin | Ubah informasi perangkat |
+| DELETE | /devices/<id> | admin | Hapus perangkat (hanya jika tanpa tiket aktif) |
 
 Header untuk endpoint terlindungi: `Authorization: Bearer <token>`.
 

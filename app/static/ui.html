@@ -42,6 +42,7 @@ th{font-size:.82rem;color:var(--mu);font-weight:600;background:#f6f8f8;white-spa
 tbody tr.t{cursor:pointer}tbody tr.t:hover{background:#f6fafa}
 .tt{font-weight:600}.tt+div{font-size:.82rem;color:var(--mu)}
 .tag{display:inline-block;padding:1px 9px;border-radius:4px;font-size:.8rem;font-weight:600;background:#e6ebed;color:#3b4b55;white-space:nowrap}
+.sla-bad{background:#fde8e7!important;color:var(--red)!important;border:1px solid #f5c2c0}
 .p-kritis{background:var(--red);color:#fff}.p-tinggi{background:#fbe6c8;color:#7a4503}.p-rendah{background:#eef1f2;color:var(--mu)}
 .s-open{background:#dfe9f6;color:var(--blu)}.s-in_progress{background:#fbe6c8;color:#7a4503}.s-resolved{background:#d9eee1;color:var(--grn)}.s-closed{background:#e6ebed;color:var(--mu)}
 .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.acts select{width:auto;padding:4px 8px;font-size:.84rem}
@@ -118,6 +119,7 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
       <div class="sla hide" id="sla"></div>
       <div class="bar"><input id="q" type="search" placeholder="Cari judul, pelanggan, perangkat" aria-label="Cari tiket">
         <select id="fp" aria-label="Filter prioritas"><option value="">Semua prioritas</option><option>kritis</option><option>tinggi</option><option>sedang</option><option>rendah</option></select>
+        <select id="fsla" aria-label="Filter SLA"><option value="">Semua status SLA</option><option value="breach">Melewati SLA</option><option value="ok">Memenuhi SLA</option></select>
         <button class="btn sec" id="refreshBtn">Muat ulang</button></div>
       <div class="panel"><div class="scroll"><table><thead><tr><th>#</th><th>Tiket</th><th>Prioritas</th><th>Status</th><th>Teknisi</th><th>Aksi</th></tr></thead><tbody id="rows"></tbody></table></div>
         <div class="empty hide" id="empty">Tidak ada tiket yang cocok.</div></div>
@@ -136,7 +138,11 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
 
 <dialog id="dNew"><h3>Tiket baru</h3>
   <div class="f"><label for="t_judul">Judul</label><input id="t_judul"></div>
-  <div class="g2"><div class="f"><label for="t_pelanggan">Pelanggan</label><input id="t_pelanggan"></div><div class="f"><label for="t_perangkat">Perangkat</label><input id="t_perangkat"></div></div>
+  <div class="g2">
+    <div class="f"><label for="t_cust">Pilih Pelanggan Terdaftar</label><select id="t_cust"><option value="">– Ketik manual atau pilih –</option></select></div>
+    <div class="f"><label for="t_dev">Pilih Perangkat</label><select id="t_dev"><option value="">– Pilih perangkat –</option></select></div>
+  </div>
+  <div class="g2"><div class="f"><label for="t_pelanggan">Nama Pelanggan</label><input id="t_pelanggan"></div><div class="f"><label for="t_perangkat">Nama Perangkat</label><input id="t_perangkat"></div></div>
   <div class="f"><label for="t_lokasi">Lokasi</label><input id="t_lokasi"></div>
   <div class="g2"><div class="f"><label for="t_jenis">Jenis</label><select id="t_jenis"><option>gangguan</option><option>pemeliharaan</option></select></div>
     <div class="f"><label for="t_prioritas">Prioritas</label><select id="t_prioritas"><option>rendah</option><option selected>sedang</option><option>tinggi</option><option>kritis</option></select></div></div>
@@ -215,12 +221,16 @@ document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
 });
 
 /* ---- tiket ---- */
+let customersList=[];
 async function load(){
-  if(me.role==="admin")techs=await api("GET","/users?role=teknisi");
+  if(me.role==="admin"){
+    techs=await api("GET","/users?role=teknisi");
+    try{customersList=(await api("GET","/customers")).data}catch(e){customersList=[]}
+  }
   tickets=(await api("GET","/tickets?per_page=100")).data;
   renderPipe();renderRows();
   if(me.role==="admin"){const s=await api("GET","/tickets/summary");
-    $("sla").innerHTML="<span>Rata-rata respons <b class='num'>"+fmt(s.rata_rata_respons_menit)+"</b></span><span>Rata-rata penyelesaian <b class='num'>"+fmt(s.rata_rata_penyelesaian_menit)+"</b></span>";}
+    $("sla").innerHTML=`<span>Kepatuhan SLA <b class='num'>${s.persentase_memenuhi_sla}%</b></span><span>Melewati SLA <b class='num' style='color:${s.jumlah_melewati_sla>0?"var(--red)":"inherit"}'>${s.jumlah_melewati_sla}</b></span><span>Rata-rata respons <b class='num'>${fmt(s.rata_rata_respons_menit)}</b></span><span>Rata-rata penyelesaian <b class='num'>${fmt(s.rata_rata_penyelesaian_menit)}</b></span>`;}
 }
 function renderPipe(){
   const n={open:0,in_progress:0,resolved:0,closed:0};tickets.forEach(t=>n[t.status]++);
@@ -229,8 +239,8 @@ function renderPipe(){
 $("pipe").onclick=e=>{const b=e.target.closest(".seg");if(!b)return;statusF=statusF===b.dataset.s?"":b.dataset.s;renderPipe();renderRows()};
 const techName=id=>{if(id==null)return "–";const u=techs.find(x=>x.id===id);return u?esc(u.nama):"#"+id};
 function renderRows(){
-  const q=$("q").value.toLowerCase(),fp=$("fp").value;
-  const list=tickets.filter(t=>(!statusF||t.status===statusF)&&(!fp||t.prioritas===fp)&&(!q||[t.judul,t.pelanggan,t.perangkat,t.lokasi].join(" ").toLowerCase().includes(q)));
+  const q=$("q").value.toLowerCase(),fp=$("fp").value,fsla=$("fsla")?$("fsla").value:"";
+  const list=tickets.filter(t=>(!statusF||t.status===statusF)&&(!fp||t.prioritas===fp)&&(!fsla||(fsla==="breach"?t.sla.melewati_sla:!t.sla.melewati_sla))&&(!q||[t.judul,t.pelanggan,t.perangkat,t.lokasi].join(" ").toLowerCase().includes(q)));
   $("empty").classList.toggle("hide",list.length>0);
   $("rows").innerHTML=list.map(t=>{
     let a="";
@@ -238,10 +248,11 @@ function renderRows(){
       a+=`<select id="as${t.id}" aria-label="Tugaskan"><option value="">Tugaskan…</option>${techs.map(u=>`<option value="${u.id}"${u.id===t.ditugaskan_ke?" selected":""}>${esc(u.nama)}</option>`).join("")}</select><button class="btn sm" data-assign="${t.id}">Tugaskan</button>`;
     NEXT[t.status].forEach(s=>{if(s==="closed"&&me.role!=="admin")return;
       a+=`<button class="btn sm sec" data-st="${t.id}|${s}">${t.status==="resolved"&&s==="in_progress"?"Buka lagi":"Jadikan "+ST[s]}</button>`});
-    return `<tr class="t" data-d="${t.id}"><td class="num">${t.id}</td><td><div class="tt">${esc(t.judul)}</div><div>${esc(t.pelanggan)} · ${esc(t.jenis)}${t.perangkat?" · "+esc(t.perangkat):""}</div></td>
+    const slaBadge=t.sla&&t.sla.melewati_sla?` <span class="tag sla-bad" title="Melewati target SLA">Lewat SLA</span>`:"";
+    return `<tr class="t" data-d="${t.id}"><td class="num">${t.id}</td><td><div class="tt">${esc(t.judul)}${slaBadge}</div><div>${esc(t.pelanggan)} · ${esc(t.jenis)}${t.perangkat?" · "+esc(t.perangkat):""}</div></td>
       <td><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span></td><td><span class="tag s-${esc(t.status)}">${ST[t.status]}</span></td><td>${techName(t.ditugaskan_ke)}</td><td><div class="acts">${a}</div></td></tr>`}).join("");
 }
-["q","fp"].forEach(i=>$(i).oninput=renderRows);$("refreshBtn").onclick=()=>run(load());
+["q","fp","fsla"].forEach(i=>$(i).oninput=renderRows);$("refreshBtn").onclick=()=>run(load());
 $("rows").onclick=e=>{
   const a=e.target.closest("[data-assign]"),s=e.target.closest("[data-st]"),sel=e.target.closest("select");
   if(sel)return;
@@ -253,18 +264,72 @@ $("rows").onclick=e=>{
 $("stBtn").onclick=()=>run(api("PUT","/tickets/"+pending.id+"/status",{status:pending.st,catatan:$("st_note").value}).then(()=>{$("dSt").close();toast("Status diubah ke "+ST[pending.st],true);return load()}));
 async function openDetail(id){
   const t=await api("GET","/tickets/"+id);
+  const respInfo=t.sla.respons_menit!=null?fmt(t.sla.respons_menit):(t.sla.sisa_respons_menit<0?`Lewat ${-t.sla.sisa_respons_menit}m`:`Sisa ${t.sla.sisa_respons_menit}m`);
+  const resInfo=t.sla.penyelesaian_menit!=null?fmt(t.sla.penyelesaian_menit):(t.sla.sisa_penyelesaian_menit<0?`Lewat ${-t.sla.sisa_penyelesaian_menit}m`:`Sisa ${t.sla.sisa_penyelesaian_menit}m`);
+  function fmtLog(l){
+    let h="";
+    if(l.aksi==="penugasan")h=`👤 Ditugaskan: <b>${esc(l.nilai_lama||"–")} → ${esc(l.nilai_baru)}</b>`;
+    else if(l.aksi==="prioritas")h=`⚡ Prioritas: <b>${esc(l.nilai_lama)} → ${esc(l.nilai_baru)}</b>`;
+    else if(l.aksi==="edit")h=`✏️ Edit ${esc(l.field_diubah)}: <span class="mu">${esc(l.nilai_lama||"–")}</span> → <b>${esc(l.nilai_baru)}</b>`;
+    else h=`🔄 Status: <b>${ST[l.status_lama]||esc(l.status_lama)} → ${ST[l.status_baru]||esc(l.status_baru)}</b>`;
+    const by=l.nama_pengubah?` · oleh ${esc(l.nama_pengubah)}`:"";
+    return `<li>${h}<div class="mu">${when(l.waktu)}${by}</div>${l.catatan?`<div>${esc(l.catatan)}</div>`:""}</li>`;
+  }
   $("drawer").innerHTML=`<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><button class="btn sm sec" id="dclose">Tutup</button></div>
    <h2 style="margin:8px 0">${esc(t.judul)}</h2><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span> <span class="tag s-${esc(t.status)}">${ST[t.status]}</span>
+   ${t.sla.melewati_sla?`<span class="tag sla-bad" style="margin-left:4px">Melewati SLA</span>`:""}
    <p class="mu">${esc(t.deskripsi||"Tanpa deskripsi")}</p>
    <dl class="meta"><dt>Pelanggan</dt><dd>${esc(t.pelanggan)}</dd><dt>Jenis</dt><dd>${esc(t.jenis)}</dd><dt>Perangkat</dt><dd>${esc(t.perangkat||"–")}</dd><dt>Lokasi</dt><dd>${esc(t.lokasi||"–")}</dd><dt>Teknisi</dt><dd>${techName(t.ditugaskan_ke)}</dd><dt>Dibuat</dt><dd>${when(t.created_at)}</dd></dl>
-   <div class="kpi"><div><span class="mu">Waktu respons</span><b class="num">${fmt(t.sla.respons_menit)}</b></div><div><span class="mu">Waktu penyelesaian</span><b class="num">${fmt(t.sla.penyelesaian_menit)}</b></div></div>
-   <h3 style="margin:18px 0 4px">Riwayat</h3>`+(t.logs.length?`<ul class="tl">${t.logs.map(l=>`<li><b>${ST[l.status_lama]} → ${ST[l.status_baru]}</b><div class="mu">${when(l.waktu)}</div>${l.catatan?`<div>${esc(l.catatan)}</div>`:""}</li>`).join("")}</ul>`:`<p class="mu">Belum ada perubahan status.</p>`);
+   <div class="kpi">
+     <div><span class="mu">Target Respons</span><b class="num">${t.sla.target_respons_menit}m</b></div>
+     <div><span class="mu">Target Selesai</span><b class="num">${t.sla.target_penyelesaian_menit}m</b></div>
+     <div><span class="mu">Waktu Respons</span><b class="num">${respInfo}</b>${t.sla.melewati_sla_respons?` <span class="tag sla-bad" style="font-size:.7rem">Lewat</span>`:""}</div>
+     <div><span class="mu">Waktu Penyelesaian</span><b class="num">${resInfo}</b>${t.sla.melewati_sla_penyelesaian?` <span class="tag sla-bad" style="font-size:.7rem">Lewat</span>`:""}</div>
+   </div>
+   <h3 style="margin:18px 0 4px">Riwayat Audit</h3>`+(t.logs.length?`<ul class="tl">${t.logs.map(fmtLog).join("")}</ul>`:`<p class="mu">Belum ada perubahan tercatat.</p>`);
   $("drawer").classList.add("open");$("dclose").onclick=()=>$("drawer").classList.remove("open");
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$("drawer").classList.remove("open")});
-$("newBtn").onclick=()=>$("dNew").showModal();
-$("createBtn").onclick=()=>run(api("POST","/tickets",{judul:$("t_judul").value,pelanggan:$("t_pelanggan").value,perangkat:$("t_perangkat").value,lokasi:$("t_lokasi").value,jenis:$("t_jenis").value,prioritas:$("t_prioritas").value,deskripsi:$("t_deskripsi").value}).then(()=>{
-  $("dNew").close();["t_judul","t_pelanggan","t_perangkat","t_lokasi","t_deskripsi"].forEach(i=>$(i).value="");toast("Tiket dibuat",true);return load()}));
+$("newBtn").onclick=async()=>{
+  $("t_cust").innerHTML='<option value="">– Ketik manual atau pilih –</option>'+customersList.map(c=>`<option value="${c.id}">${esc(c.nama)}</option>`).join("");
+  $("t_dev").innerHTML='<option value="">– Pilih perangkat –</option>';
+  $("dNew").showModal();
+};
+$("t_cust").onchange=async()=>{
+  const cid=$("t_cust").value;
+  $("t_dev").innerHTML='<option value="">– Pilih perangkat –</option>';
+  if(!cid)return;
+  const c=customersList.find(x=>x.id==cid);
+  if(c)$("t_pelanggan").value=c.nama;
+  try{
+    const devs=(await api("GET","/devices?customer_id="+cid)).data;
+    $("t_dev").innerHTML='<option value="">– Pilih perangkat –</option>'+devs.map(d=>`<option value="${d.id}" data-lok="${esc(d.lokasi||'')}">${esc(d.nama)} (${esc(d.jenis)})</option>`).join("");
+  }catch(e){}
+};
+$("t_dev").onchange=()=>{
+  const opt=$("t_dev").selectedOptions[0];
+  if(opt&&opt.value){
+    $("t_perangkat").value=opt.text.replace(/\s*\(.*?\)$/,"");
+    if(opt.dataset.lok)$("t_lokasi").value=opt.dataset.lok;
+  }
+};
+$("createBtn").onclick=()=>{
+  const payload={
+    judul:$("t_judul").value,
+    pelanggan:$("t_pelanggan").value,
+    perangkat:$("t_perangkat").value,
+    lokasi:$("t_lokasi").value,
+    jenis:$("t_jenis").value,
+    prioritas:$("t_prioritas").value,
+    deskripsi:$("t_deskripsi").value
+  };
+  if($("t_cust").value)payload.customer_id=+$("t_cust").value;
+  if($("t_dev").value)payload.device_id=+$("t_dev").value;
+  return run(api("POST","/tickets",payload).then(()=>{
+    $("dNew").close();["t_judul","t_pelanggan","t_perangkat","t_lokasi","t_deskripsi"].forEach(i=>$(i).value="");
+    $("t_cust").value="";$("t_dev").value="";toast("Tiket dibuat",true);return load();
+  }));
+};
 
 /* ---- teknisi & undangan ---- */
 async function loadTeam(){
