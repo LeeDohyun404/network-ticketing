@@ -149,7 +149,6 @@ class Ticket(db.Model):
     resolved_at = db.Column(db.DateTime, nullable=True)
 
     logs = db.relationship("TicketLog", backref="ticket", order_by="TicketLog.id", cascade="all, delete-orphan")
-    audit_logs = db.relationship("AuditLog", backref="ticket", order_by="AuditLog.id", cascade="all, delete-orphan")
 
     def __init__(self, judul="", deskripsi="", pelanggan="", jenis="gangguan", perangkat="",
                  lokasi="", prioritas="sedang", status="open", dibuat_oleh=None, ditugaskan_ke=None,
@@ -236,7 +235,7 @@ class Ticket(db.Model):
             "sla": self.calculate_sla(targets_map=targets_map, now=now),
         }
         if with_logs:
-            data["logs"] = [log.to_dict() for log in self.logs]
+            data["logs"] = [log.to_dict() for log in self.logs if log.aksi == "status"]
         return data
 
 
