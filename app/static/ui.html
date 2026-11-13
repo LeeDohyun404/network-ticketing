@@ -515,7 +515,7 @@
       border: 1px solid var(--ln);
       border-radius: 10px;
       padding: 24px;
-      width: min(480px, 94vw);
+      width: min(520px, 94vw);
       color: var(--ink)
     }
 
@@ -1138,26 +1138,20 @@
 
   <dialog id="dNew">
     <h3>Tiket baru</h3>
-    <div class="f"><label for="t_judul">Judul Gangguan / Masalah</label><input id="t_judul"
-        placeholder="Contoh: Kabel FO Putus / Redaman Tinggi"></div>
-    <div
-      style="background:var(--s2);padding:10px 12px;border-radius:6px;margin:8px 0 12px;font-size:.82rem;color:var(--mu);line-height:1.4">
-      💡 <b>Opsi 1 (Otomatis):</b> Pilih dari master pelanggan & perangkat jika sudah terdaftar, ATAU<br>
-      ✍️ <b>Opsi 2 (Ketik Bebas):</b> Langsung ketik manual di kolom <b>Nama Pelanggan</b>, <b>Perangkat</b> (misal:
-      <i>ONT, OLT, Tiang FO, ODP</i>), dan <b>Lokasi</b> di bawah.
-    </div>
+    <div class="f"><label for="t_judul">Judul Gangguan / Masalah *</label><input id="t_judul"
+        placeholder="Contoh: Kabel FO Putus / Redaman Tinggi" required></div>
     <div class="g2">
-      <div class="f"><label for="t_cust">Pilih Master Pelanggan (opsional)</label><select id="t_cust">
-          <option value="">– Ketik manual bebas di bawah –</option>
+      <div class="f"><label for="t_cust">Pilih Master Pelanggan</label><select id="t_cust">
+          <option value="">– Pilih dari master (opsional) –</option>
         </select></div>
-      <div class="f"><label for="t_dev">Pilih Master Perangkat (opsional)</label><select id="t_dev">
-          <option value="">– Pilih perangkat –</option>
+      <div class="f"><label for="t_dev">Pilih Master Perangkat</label><select id="t_dev">
+          <option value="">– Pilih dari master (opsional) –</option>
         </select></div>
     </div>
     <div class="g2">
       <div class="f"><label for="t_pelanggan">Nama Pelanggan / Instansi *</label><input id="t_pelanggan"
           placeholder="Contoh: SMA Negeri 1 Songgom / Tiang Publik" required></div>
-      <div class="f"><label for="t_perangkat">Nama / Jenis Perangkat (bebas ketik)</label><input id="t_perangkat"
+      <div class="f"><label for="t_perangkat">Nama / Jenis Perangkat</label><input id="t_perangkat"
           placeholder="Contoh: Tiang FO P12, ONT ZTE, ODP, Kabel"></div>
     </div>
     <div class="f"><label for="t_lokasi">Titik Lokasi Gangguan</label><input id="t_lokasi"
@@ -1512,14 +1506,14 @@
     }
     document.addEventListener("keydown", e => { if (e.key === "Escape") $("drawer").classList.remove("open") });
     $("newBtn").onclick = async () => {
-      $("t_cust").innerHTML = '<option value="">– Ketik manual bebas di bawah –</option>' + customersList.map(c => `<option value="${c.id}">${esc(c.nama)}</option>`).join("");
-      $("t_dev").innerHTML = '<option value="">– Pilih dari master atau ketik bebas –</option>' + allDevicesList.map(d => `<option value="${d.id}" data-lok="${esc(d.lokasi || '')}" data-cid="${d.customer_id || ''}" data-cname="${esc(d.nama_pelanggan || '')}">${esc(d.nama)} (${esc(d.jenis)})${d.nama_pelanggan ? ' · ' + esc(d.nama_pelanggan) : ' · Lapangan'}</option>`).join("");
+      $("t_cust").innerHTML = '<option value="">– Pilih dari master (opsional) –</option>' + customersList.map(c => `<option value="${c.id}">${esc(c.nama)}</option>`).join("");
+      $("t_dev").innerHTML = '<option value="">– Pilih dari master (opsional) –</option>' + allDevicesList.map(d => `<option value="${d.id}" data-lok="${esc(d.lokasi || '')}" data-cid="${d.customer_id || ''}" data-cname="${esc(d.nama_pelanggan || '')}">${esc(d.nama)} (${esc(d.jenis)})${d.nama_pelanggan ? ' · ' + esc(d.nama_pelanggan) : ' · Lapangan'}</option>`).join("");
       $("dNew").showModal();
     };
     $("t_cust").onchange = async () => {
       const cid = $("t_cust").value;
       if (!cid) {
-        $("t_dev").innerHTML = '<option value="">– Pilih dari master atau ketik bebas –</option>' + allDevicesList.map(d => `<option value="${d.id}" data-lok="${esc(d.lokasi || '')}" data-cid="${d.customer_id || ''}" data-cname="${esc(d.nama_pelanggan || '')}">${esc(d.nama)} (${esc(d.jenis)})${d.nama_pelanggan ? ' · ' + esc(d.nama_pelanggan) : ' · Lapangan'}</option>`).join("");
+        $("t_dev").innerHTML = '<option value="">– Pilih dari master (opsional) –</option>' + allDevicesList.map(d => `<option value="${d.id}" data-lok="${esc(d.lokasi || '')}" data-cid="${d.customer_id || ''}" data-cname="${esc(d.nama_pelanggan || '')}">${esc(d.nama)} (${esc(d.jenis)})${d.nama_pelanggan ? ' · ' + esc(d.nama_pelanggan) : ' · Lapangan'}</option>`).join("");
         return;
       }
       const c = customersList.find(x => x.id == cid);
