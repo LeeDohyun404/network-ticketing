@@ -34,6 +34,8 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 
 **sla_targets**: id, prioritas (`kritis`, `tinggi`, `sedang`, `rendah` - unik), target_respons_menit, target_penyelesaian_menit
 
+**notifications**: id, user_id, ticket_id (nullable), tipe (`eskalasi_manual`, `eskalasi_sla`, `sistem`), judul, pesan, email_terkirim, dibaca, dibaca_pada, created_at
+
 `ticket_logs` dipisah dari `tickets` karena satu tiket bisa berubah status berkali-kali, dan tiap perubahan butuh satu baris catatan sendiri.
 
 ## Aturan
@@ -91,6 +93,11 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 | GET | /tickets/<id>/attachments | login | Daftar metadata lampiran tiket |
 | GET | /attachments/<id> | login | Ambil data lampiran beserta base64 gambar |
 | DELETE | /attachments/<id> | admin/pengunggah | Hapus lampiran tiket |
+| POST | /tickets/<id>/escalate | admin atau teknisi terkait | Eskalasi tingkat penanganan tiket + kirim notifikasi & email |
+| POST | /tickets/auto-escalate | admin | Pemicu eskalasi otomatis tiket yang melanggar batas SLA |
+| GET | /notifications | login | Daftar notifikasi pengguna login (`?unread_only=`) |
+| PUT | /notifications/<id>/read | pemilik notifikasi | Tandai notifikasi spesifik sebagai telah dibaca |
+| PUT | /notifications/read-all | login | Tandai seluruh notifikasi pengguna sebagai telah dibaca |
 
 Header untuk endpoint terlindungi: `Authorization: Bearer <token>`.
 

@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>PLN Icon Plus - Network Incident Ticketing</title>
+  <title>PLN Icon Plus - ICRM+ Network Incident Ticketing</title>
   <style>
     :root {
       --bg: #e4f5f8;
@@ -861,9 +861,17 @@
       letter-spacing: .04em
     }
 
-    .att-thumb .att-label.before { background: var(--amb) }
-    .att-thumb .att-label.after  { background: var(--grn) }
-    .att-thumb .att-label.umum   { background: var(--mu) }
+    .att-thumb .att-label.before {
+      background: var(--amb)
+    }
+
+    .att-thumb .att-label.after {
+      background: var(--grn)
+    }
+
+    .att-thumb .att-label.umum {
+      background: var(--mu)
+    }
 
     .att-thumb .att-del {
       position: absolute;
@@ -872,7 +880,7 @@
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      background: rgba(0,0,0,.55);
+      background: rgba(0, 0, 0, .55);
       color: #fff;
       border: 0;
       font-size: .75rem;
@@ -883,7 +891,9 @@
       line-height: 1
     }
 
-    .att-thumb:hover .att-del { display: flex }
+    .att-thumb:hover .att-del {
+      display: flex
+    }
 
     .att-upload {
       width: 80px;
@@ -901,32 +911,37 @@
       gap: 4px
     }
 
-    .att-upload:hover { border-color: var(--ac); color: var(--ac) }
+    .att-upload:hover {
+      border-color: var(--ac);
+      color: var(--ac)
+    }
 
     #attLightbox {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.85);
+      background: rgba(0, 0, 0, .85);
       z-index: 100;
       display: none;
       align-items: center;
       justify-content: center
     }
 
-    #attLightbox.open { display: flex }
+    #attLightbox.open {
+      display: flex
+    }
 
     #attLightbox img {
       max-width: 90vw;
       max-height: 90vh;
       border-radius: 6px;
-      box-shadow: 0 8px 40px rgba(0,0,0,.6)
+      box-shadow: 0 8px 40px rgba(0, 0, 0, .6)
     }
 
     #attLightbox button {
       position: absolute;
       top: 16px;
       right: 20px;
-      background: rgba(255,255,255,.15);
+      background: rgba(255, 255, 255, .15);
       border: 0;
       color: #fff;
       font-size: 1.5rem;
@@ -942,7 +957,8 @@
   <div id="auth">
     <div class="box" id="loginBox">
       <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
-        <img src="/static/logo.webp" alt="PLN Logo" style="width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12);margin-top:2px">
+        <img src="/static/logo.webp" alt="PLN Logo"
+          style="width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12);margin-top:2px">
         <div>
           <h1 style="font-size:1.25rem;margin:0;line-height:1.2">ICRM+ PLN Icon Plus</h1>
           <p class="mu" style="margin:2px 0 0;font-size:.82rem">Masuk untuk mengelola tiket gangguan.</p>
@@ -968,7 +984,8 @@
     <aside>
       <div class="brand">
         <div class="brand-row">
-          <img src="/static/logo.webp" alt="PLN Logo" style="width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.25)">
+          <img src="/static/logo.webp" alt="PLN Logo"
+            style="width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.25)">
           <div>ICRM+<br>PLN Icon Plus</div>
         </div>
         <span>Pusat gangguan jaringan</span>
@@ -977,6 +994,10 @@
       <button class="nav hide" id="navCust" data-view="pelanggan">Pelanggan</button>
       <button class="nav hide" id="navDev" data-view="perangkat">Perangkat</button>
       <button class="nav hide" id="navMaint" data-view="maintenance">Maintenance</button>
+      <button class="nav hide" id="navNotif" data-view="notifikasi" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Notifikasi</span>
+        <span class="tag hide" id="notifBadge" style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:.72rem">0</span>
+      </button>
       <button class="nav hide" id="navTeam" data-view="teknisi">Teknisi</button>
       <div class="me"><b id="meName"></b><span id="meRole" class="mu"></span><br><button id="logout">Keluar</button>
       </div>
@@ -1130,6 +1151,20 @@
           </div>
           <div class="empty hide" id="maintEmpty">Belum ada jadwal maintenance. Klik "+ Buat Jadwal" untuk merencanakan
             pemeliharaan.</div>
+        </div>
+      </section>
+
+      <section id="vNotifikasi" class="hide">
+        <div class="head">
+          <h2>Notifikasi & Eskalasi</h2>
+          <div class="acts">
+            <button class="btn sm sec" id="markAllReadBtn">Tandai Semua Dibaca</button>
+            <button class="btn sm sec" id="refreshNotifBtn">Muat Ulang</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div id="notifList"></div>
+          <div class="empty hide" id="notifEmpty">Belum ada notifikasi.</div>
         </div>
       </section>
     </main>
@@ -1346,8 +1381,10 @@
       $("meName").textContent = me.nama; $("meRole").textContent = me.role;
       ["navCust", "navDev", "navTeam", "newBtn", "sla"].forEach(i => $(i).classList.toggle("hide", !admin));
       $("navMaint").classList.remove("hide");
+      $("navNotif").classList.remove("hide");
       $("addMaintBtn").classList.toggle("hide", !admin);
       run(load());
+      updateNotifBadge();
     }
     document.querySelectorAll(".nav").forEach(b => b.onclick = () => {
       document.querySelectorAll(".nav").forEach(n => n.classList.toggle("on", n === b));
@@ -1356,10 +1393,12 @@
       $("vPelanggan").classList.toggle("hide", b.dataset.view !== "pelanggan");
       $("vPerangkat").classList.toggle("hide", b.dataset.view !== "perangkat");
       $("vMaintenance").classList.toggle("hide", b.dataset.view !== "maintenance");
+      $("vNotifikasi").classList.toggle("hide", b.dataset.view !== "notifikasi");
       if (b.dataset.view === "teknisi") run(loadTeam());
       if (b.dataset.view === "pelanggan") run(loadCustomersView());
       if (b.dataset.view === "perangkat") run(loadDevicesView());
       if (b.dataset.view === "maintenance") run(loadMaintenanceView());
+      if (b.dataset.view === "notifikasi") run(loadNotificationsView());
     });
 
     /* ---- tiket ---- */
@@ -1396,7 +1435,8 @@
           a += `<button class="btn sm sec" data-st="${t.id}|${s}">${t.status === "resolved" && s === "in_progress" ? "Buka lagi" : "Jadikan " + ST[s]}</button>`
         });
         const slaBadge = t.sla && t.sla.melewati_sla ? ` <span class="tag sla-bad" title="Melewati target SLA">Lewat SLA</span>` : "";
-        return `<tr class="t" data-d="${t.id}"><td class="num">${t.id}</td><td><div class="tt">${esc(t.judul)}${slaBadge}</div><div>${esc(t.pelanggan)} · ${esc(t.jenis)}${t.perangkat ? " · " + esc(t.perangkat) : ""}</div></td>
+        const escBadge = t.is_escalated ? ` <span class="tag" style="background:var(--red);color:#fff" title="Dieskalasi ke Level ${t.escalation_level}">⚡ Lv ${t.escalation_level}</span>` : "";
+        return `<tr class="t" data-d="${t.id}"><td class="num">${t.id}</td><td><div class="tt">${esc(t.judul)}${slaBadge}${escBadge}</div><div>${esc(t.pelanggan)} · ${esc(t.jenis)}${t.perangkat ? " · " + esc(t.perangkat) : ""}</div></td>
       <td><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span></td><td><span class="tag s-${esc(t.status)}">${ST[t.status]}</span></td><td>${techName(t.ditugaskan_ke)}</td><td><div class="acts">${a}</div></td></tr>`
       }).join("");
     }
@@ -1420,15 +1460,20 @@
         let h = "";
         if (l.aksi === "penugasan") h = `👤 Ditugaskan: <b>${esc(l.nilai_lama || "\u2013")} \u2192 ${esc(l.nilai_baru)}</b>`;
         else if (l.aksi === "prioritas") h = `\u26a1 Prioritas: <b>${esc(l.nilai_lama)} \u2192 ${esc(l.nilai_baru)}</b>`;
+        else if (l.aksi === "eskalasi") h = `\u26a1 Eskalasi: <b>${esc(l.catatan || 'Dieskalasi')}</b>`;
         else if (l.aksi === "edit") h = `\u270f\ufe0f Edit ${esc(l.field_diubah)}: <span class="mu">${esc(l.nilai_lama || "\u2013")}</span> \u2192 <b>${esc(l.nilai_baru)}</b>`;
         else h = `\U0001f504 Status: <b>${ST[l.status_lama] || esc(l.status_lama)} \u2192 ${ST[l.status_baru] || esc(l.status_baru)}</b>`;
         const by = l.nama_pengubah ? ` \u00b7 oleh ${esc(l.nama_pengubah)}` : "";
-        return `<li>${h}<div class="mu">${when(l.waktu)}${by}</div>${l.catatan ? `<div>${esc(l.catatan)}</div>` : ""}</li>`;
+        return `<li>${h}<div class="mu">${when(l.waktu)}${by}</div>${l.catatan && l.aksi !== 'eskalasi' ? `<div>${esc(l.catatan)}</div>` : ""}</li>`;
       }
       // Ambil lampiran
       let atts = [];
-      try { atts = (await api("GET", `/tickets/${t.id}/attachments`)).lampiran; } catch(e) {}
+      try { atts = (await api("GET", `/tickets/${t.id}/attachments`)).lampiran; } catch (e) { }
       const canUpload = me && (me.role === "admin" || t.ditugaskan_ke === me.id);
+      const canEscalate = canUpload && t.status !== "resolved" && t.status !== "closed";
+      const escBtnHtml = canEscalate ? `<button class="btn sm" id="escBtn" style="background:var(--red);border-color:var(--red);color:#fff">⚡ Eskalasi</button>` : "";
+      const escBadge = t.is_escalated ? ` <span class="tag" style="background:var(--red);color:#fff">⚡ Dieskalasi (Lv ${t.escalation_level})</span>` : "";
+      const escBanner = t.is_escalated ? `<div style="background:#fde8e7;border:1px solid #f5c2c0;color:var(--red);padding:10px 12px;border-radius:6px;margin:10px 0;font-size:.85rem">⚡ <b>DIESKALASI KE LEVEL ${t.escalation_level}</b><div style="margin-top:2px;color:var(--ink)">${esc(t.escalation_reason || 'Eskalasi penanganan tiket')}</div><div class="mu" style="font-size:.78rem;margin-top:2px">${when(t.escalated_at)}</div></div>` : "";
       function attThumbHtml(a) {
         const delBtn = canUpload ? `<button class="att-del" data-aid="${a.id}" title="Hapus lampiran" aria-label="Hapus">\u2715</button>` : "";
         const src = a.data ? `data:${esc(a.mime_type)};base64,${a.data}` : "";
@@ -1441,9 +1486,10 @@
           : "";
         return `<div class="att-grid" id="attGrid">${thumbs}${uploadBtn}</div>`;
       }
-      $("drawer").innerHTML = `<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><button class="btn sm sec" id="dclose">Tutup</button></div>
+      $("drawer").innerHTML = `<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><div>${escBtnHtml}<button class="btn sm sec" id="dclose" style="margin-left:6px">Tutup</button></div></div>
    <h2 style="margin:8px 0">${esc(t.judul)}</h2><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span> <span class="tag s-${esc(t.status)}">${ST[t.status]}</span>
-   ${t.sla.melewati_sla ? `<span class="tag sla-bad" style="margin-left:4px">Melewati SLA</span>` : ""}
+   ${t.sla.melewati_sla ? `<span class="tag sla-bad" style="margin-left:4px">Melewati SLA</span>` : ""}${escBadge}
+   ${escBanner}
    <p class="mu">${esc(t.deskripsi || "Tanpa deskripsi")}</p>
    <dl class="meta"><dt>Pelanggan</dt><dd>${esc(t.pelanggan)}</dd><dt>Jenis</dt><dd>${esc(t.jenis)}</dd><dt>Perangkat</dt><dd>${esc(t.perangkat || "\u2013")}</dd><dt>Lokasi</dt><dd>${esc(t.lokasi || "\u2013")}</dd><dt>Teknisi</dt><dd>${techName(t.ditugaskan_ke)}</dd><dt>Dibuat</dt><dd>${when(t.created_at)}</dd></dl>
    <div class="kpi">
@@ -1464,6 +1510,14 @@
    </div>
    <h3 style="margin:18px 0 4px">Riwayat Audit</h3>`+ (t.logs.length ? `<ul class="tl">${t.logs.map(fmtLog).join("")}</ul>` : `<p class="mu">Belum ada perubahan tercatat.</p>`);
       $("drawer").classList.add("open"); $("dclose").onclick = () => $("drawer").classList.remove("open");
+      if ($("escBtn")) {
+        $("escBtn").onclick = async () => {
+          const alasan = prompt("Alasan eskalasi tiket (notifikasi & email akan dikirim ke PIC/Admin):");
+          if (!alasan || !alasan.trim()) return;
+          await run(api("POST", `/tickets/${t.id}/escalate`, { alasan: alasan.trim() })
+            .then(() => { toast("Tiket berhasil dieskalasi dan notifikasi terkirim", true); openDetail(t.id); load(); }));
+        };
+      }
       // --- Load & bind lampiran ---
       async function reloadAtts() {
         const grid = $("attGrid"); if (!grid) return;
@@ -1475,7 +1529,7 @@
             : "";
           grid.innerHTML = withData.map(a => attThumbHtml(a)).join("") + uploadBtn;
           grid.previousElementSibling.textContent = `\U0001f4f7 Lampiran Foto (${withData.length}/5)`;
-        } catch(e) {}
+        } catch (e) { }
         bindAttEvents();
       }
       function bindAttEvents() {
@@ -1488,9 +1542,9 @@
         if (fi) fi.onchange = async () => {
           const file = fi.files[0]; if (!file) return;
           if (file.size > 2097152) { toast("Ukuran file melebihi 2 MB", false); return; }
-          if (!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)) { toast("Format tidak didukung (JPEG/PNG/WebP/GIF)", false); return; }
+          if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) { toast("Format tidak didukung (JPEG/PNG/WebP/GIF)", false); return; }
           const jenis = prompt("Jenis foto:\nbefore = sebelum penanganan\nafter = sesudah\numum = dokumentasi umum", "umum");
-          if (!jenis || !["before","after","umum"].includes(jenis.trim())) { toast("Jenis harus: before, after, atau umum", false); return; }
+          if (!jenis || !["before", "after", "umum"].includes(jenis.trim())) { toast("Jenis harus: before, after, atau umum", false); return; }
           const b64 = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result.split(",")[1]); r.readAsDataURL(file); });
           await run(api("POST", `/tickets/${t.id}/attachments`, { nama_file: file.name, mime_type: file.type, data: b64, jenis: jenis.trim() })
             .then(() => { toast("Foto berhasil diunggah", true); reloadAtts(); }));
@@ -1667,6 +1721,9 @@
     async function loadMaintenanceView() {
       const res = await api("GET", "/maintenance-schedules");
       schedulesList = res.data || [];
+      $("maintEmpty").textContent = me && me.role === "admin"
+        ? 'Belum ada jadwal maintenance. Klik "+ Buat Jadwal" untuk merencanakan pemeliharaan.'
+        : 'Belum ada jadwal maintenance.';
       $("maintEmpty").classList.toggle("hide", schedulesList.length > 0);
       $("maintRows").innerHTML = schedulesList.map((s, i) => {
         let acts = "";
@@ -1749,6 +1806,50 @@
         }
       }
     };
+
+    /* ---- notifikasi & eskalasi ---- */
+    async function updateNotifBadge() {
+      try {
+        const res = await api("GET", "/notifications?unread_only=true");
+        const count = res.unread_count || 0;
+        $("notifBadge").textContent = count;
+        $("notifBadge").classList.toggle("hide", count === 0);
+      } catch (e) { }
+    }
+    async function loadNotificationsView() {
+      try {
+        const res = await api("GET", "/notifications");
+        const list = res.data || [];
+        $("notifEmpty").classList.toggle("hide", list.length > 0);
+        $("notifList").innerHTML = list.map(n => `
+          <div style="padding:14px 16px;border-bottom:1px solid var(--bd);background:${n.dibaca ? 'transparent' : 'rgba(7,170,184,.06)'};display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-weight:600;font-size:.9rem;color:var(--ink)">
+                ${n.tipe && n.tipe.startsWith('eskalasi') ? '⚡ ' : '🔔 '}${esc(n.judul)}
+                ${n.dibaca ? '' : '<span class="tag" style="background:var(--ac);color:#fff;font-size:.7rem;margin-left:6px">Baru</span>'}
+              </div>
+              <div style="margin:4px 0;font-size:.85rem;color:var(--ink)">${esc(n.pesan)}</div>
+              <div class="mu" style="font-size:.75rem">${when(n.created_at)}${n.email_terkirim ? ' · ✉️ Email terkirim' : ''}</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              ${n.tiket_id ? `<button class="btn sm sec" onclick="openDetail(${n.tiket_id})">Lihat Tiket</button>` : ''}
+              ${!n.dibaca ? `<button class="btn sm sec" onclick="markReadNotif(${n.id})">Tandai Dibaca</button>` : ''}
+            </div>
+          </div>
+        `).join("");
+        updateNotifBadge();
+      } catch (e) { toast(e.message, false); }
+    }
+    window.markReadNotif = async (id) => {
+      await api("PUT", `/notifications/${id}/read`);
+      loadNotificationsView();
+    };
+    $("markAllReadBtn").onclick = () => run((async () => {
+      await api("PUT", "/notifications/read-all");
+      toast("Semua notifikasi ditandai dibaca", true);
+      loadNotificationsView();
+    })());
+    $("refreshNotifBtn").onclick = () => run(loadNotificationsView());
 
     checkActivation();
     try {

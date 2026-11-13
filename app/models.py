@@ -153,7 +153,12 @@ class Ticket(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
     responded_at = db.Column(db.DateTime, nullable=True)
     resolved_at = db.Column(db.DateTime, nullable=True)
+    is_escalated = db.Column(db.Boolean, default=False, nullable=False)
+    escalation_level = db.Column(db.Integer, default=0, nullable=False)
+    escalated_at = db.Column(db.DateTime, nullable=True)
+    escalation_reason = db.Column(db.Text, default="")
 
+    assigned_tech = db.relationship("User", foreign_keys=[ditugaskan_ke])
     logs = db.relationship("TicketLog", backref="ticket", order_by="TicketLog.id", cascade="all, delete-orphan")
     comments = db.relationship("TicketComment", backref="ticket", order_by="TicketComment.id.asc()", cascade="all, delete-orphan")
     attachments = db.relationship("TicketAttachment", backref="ticket", order_by="TicketAttachment.id", cascade="all, delete-orphan")
@@ -240,6 +245,10 @@ class Ticket(db.Model):
             "created_at": self.created_at.isoformat(),
             "responded_at": self.responded_at.isoformat() if self.responded_at else None,
             "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
+            "is_escalated": bool(self.is_escalated),
+            "escalation_level": self.escalation_level or 0,
+            "escalated_at": self.escalated_at.isoformat() if self.escalated_at else None,
+            "escalation_reason": self.escalation_reason or "",
             "sla": self.calculate_sla(targets_map=targets_map, now=now),
         }
         if with_logs:
@@ -538,3 +547,46 @@ class MaintenanceSchedule(db.Model):
             "nama_pembuat": self.creator.nama if self.creator else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey("tickets.id"), nullable=True, index=True)
+    judul = db.Column(db.String(150), nullable=False)
+    pesan = db.Column(db.Text, nullable=False)
+    tipe = db.Column(db.String(30), nullable=False, default="eskalasi")
+    dibaca = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+
+    user = db.relationship("User", backref="notifications")
+    ticket = db.relationship("Ticket")
+
+    def __init__(self, user_id=None, ticket_id=None, judul="", pesan="",
+                 tipe="eskalasi", dibaca=False, created_at=None, **kwargs):
+        super().__init__(**kwargs)
+        if user_id is not None:
+            self.user_id = user_id
+        if ticket_id is not None:
+            self.ticket_id = ticket_id
+        self.judul = judul
+        self.pesan = pesan
+        self.tipe = tipe
+        self.dibaca = dibaca
+        if created_at is not None:
+            self.created_at = created_at
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "ticket_id": self.ticket_id,
+            "judul": self.judul,
+            "pesan": self.pesan,
+            "tipe": self.tipe,
+            "dibaca": bool(self.dibaca),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+

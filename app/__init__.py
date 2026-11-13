@@ -55,12 +55,14 @@ def create_app(test_config=None):
     from .routes.customers import bp as customers_bp
     from .routes.maintenance import bp as maintenance_bp
     from .routes.attachments import bp as attachments_bp
+    from .routes.notifications import bp as notifications_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tickets_bp)
     app.register_blueprint(customers_bp)
     app.register_blueprint(maintenance_bp)
     app.register_blueprint(attachments_bp)
+    app.register_blueprint(notifications_bp)
 
     @app.get("/")
     def index():
@@ -137,6 +139,24 @@ def create_app(test_config=None):
                         data TEXT NOT NULL,
                         jenis VARCHAR(20) NOT NULL DEFAULT 'umum',
                         diunggah_oleh INTEGER NOT NULL REFERENCES users(id),
+                        created_at TIMESTAMP NOT NULL
+                    );
+                """))
+                # Kolom tickets: eskalasi (Fitur 7)
+                conn.execute(db.text("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS is_escalated BOOLEAN DEFAULT FALSE;"))
+                conn.execute(db.text("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS escalation_level INTEGER DEFAULT 0;"))
+                conn.execute(db.text("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS escalated_at TIMESTAMP;"))
+                conn.execute(db.text("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS escalation_reason TEXT;"))
+                # Tabel notifications (Fitur 7)
+                conn.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS notifications (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id),
+                        ticket_id INTEGER REFERENCES tickets(id),
+                        judul VARCHAR(150) NOT NULL,
+                        pesan TEXT NOT NULL,
+                        tipe VARCHAR(30) NOT NULL DEFAULT 'eskalasi',
+                        dibaca BOOLEAN NOT NULL DEFAULT FALSE,
                         created_at TIMESTAMP NOT NULL
                     );
                 """))
