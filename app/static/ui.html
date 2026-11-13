@@ -1416,7 +1416,7 @@
       // Ambil lampiran
       let atts = [];
       try { atts = (await api("GET", `/tickets/${t.id}/attachments`)).lampiran; } catch(e) {}
-      const canUpload = role === "admin" || t.ditugaskan_ke === me;
+      const canUpload = me && (me.role === "admin" || t.ditugaskan_ke === me.id);
       function attThumbHtml(a) {
         const delBtn = canUpload ? `<button class="att-del" data-aid="${a.id}" title="Hapus lampiran" aria-label="Hapus">\u2715</button>` : "";
         const src = a.data ? `data:${esc(a.mime_type)};base64,${a.data}` : "";
