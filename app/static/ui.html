@@ -2058,34 +2058,38 @@
           return { ...a, uniformSrc };
         }));
 
+        // Kelompokkan gambar per kategori: umum, before, after
+        const groups = ["umum","before","after"];
+        const grouped = {};
+        groups.forEach(g => { grouped[g] = uniformImages.filter(a => a.jenis === g); });
+
         function renderPhotoCard(a) {
           if (!a) return `<td width="48%" style="width:48%;border:none;padding:0;"></td>`;
           const isBefore = a.jenis === "before";
           const isAfter = a.jenis === "after";
-          const labelTitle = isBefore
-            ? "SEBELUM PENANGANAN (BEFORE)"
-            : (isAfter ? "SESUDAH PENANGANAN (AFTER)" : "DOKUMENTASI UMUM LAPANGAN");
           const headerBg = isBefore ? "#d97706" : (isAfter ? "#10b981" : "#1a6478");
           const frameColor = isBefore ? "#d97706" : (isAfter ? "#10b981" : "#07aab8");
-
           return `
-            <td width="48%" valign="top" style="width:48%;border:none;padding:0;">
-              <table width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%;border:2pt solid ${frameColor};border-collapse:collapse;background-color:#ffffff;">
-                <!-- 1. Header Shape Badge -->
+            <td width="48%" valign="top" style="width:48%;border:none;padding:0;page-break-inside:avoid;">
+              <table width="100%" border="0" cellpadding="0" cellspacing="0"
+                     style="width:100%;border:2pt solid ${frameColor};border-collapse:collapse;background-color:#ffffff;page-break-inside:avoid;mso-break-type:avoid-page;">
                 <tr>
-                  <td bgcolor="${headerBg}" align="center" style="background-color:${headerBg};color:#ffffff;font-size:8.5pt;font-weight:bold;padding:5pt 8pt;text-align:center;font-family:Calibri,Arial,sans-serif;letter-spacing:0.04em;border:none;">
-                    ${labelTitle}
+                  <td bgcolor="${headerBg}" align="center"
+                      style="background-color:${headerBg};color:#ffffff;font-size:8.5pt;font-weight:bold;padding:5pt 8pt;text-align:center;font-family:Calibri,Arial,sans-serif;letter-spacing:0.04em;border:none;">
+                    ${esc(a.nama_file)}
                   </td>
                 </tr>
-                <!-- 2. Image Shape Box (Seragam 200x135 px) -->
                 <tr>
-                  <td bgcolor="#f8fcfd" align="center" style="background-color:#f8fcfd;padding:8pt;text-align:center;border:none;">
-                    <img src="${a.uniformSrc}" width="200" height="135" border="0" style="width:200px;height:135px;display:block;margin:0 auto;border:1pt solid #c8e4ea;" alt="${esc(a.nama_file)}">
+                  <td bgcolor="#f8fcfd" align="center"
+                      style="background-color:#f8fcfd;padding:8pt;text-align:center;border:none;">
+                    <img src="${a.uniformSrc}" width="200" height="135" border="0"
+                         style="width:200px;height:135px;display:block;margin:0 auto;border:1pt solid #c8e4ea;"
+                         alt="${esc(a.nama_file)}">
                   </td>
                 </tr>
-                <!-- 3. Footer Caption Box -->
                 <tr>
-                  <td bgcolor="#f0f9fb" align="center" style="background-color:#f0f9fb;padding:5pt 8pt;border-top:1pt solid #d0e6eb;text-align:center;font-family:Calibri,Arial,sans-serif;border-left:none;border-right:none;border-bottom:none;">
+                  <td bgcolor="#f0f9fb" align="center"
+                      style="background-color:#f0f9fb;padding:5pt 8pt;border-top:1pt solid #d0e6eb;text-align:center;font-family:Calibri,Arial,sans-serif;border-left:none;border-right:none;border-bottom:none;">
                     <div style="font-size:8.5pt;font-weight:bold;color:#0e323d;word-break:break-all;">${esc(a.nama_file)}</div>
                     <div style="font-size:7.5pt;color:#666666;margin-top:2pt;">Kategori: <b>${esc(a.jenis.toUpperCase())}</b>${a.created_at ? ' &middot; Waktu: ' + when(a.created_at) : ''}</div>
                   </td>
@@ -2094,22 +2098,54 @@
             </td>`;
         }
 
-        attHtml = `<table width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%;border:none;margin-top:8pt;">`;
-        for (let i = 0; i < uniformImages.length; i += 2) {
-          const a1 = uniformImages[i];
-          const a2 = uniformImages[i + 1] || null;
+        // Render per grup – tiap grup diawali label kategori & semua kartu grup
+        // dibungkus dalam satu blok page-break-inside:avoid agar header+gambar
+        // tidak terpisah antar halaman Word.
+        const groupLabels = {
+          umum:   { title: "📷 DOKUMENTASI UMUM LAPANGAN",   bg: "#1a6478" },
+          before: { title: "📷 SEBELUM PENANGANAN (BEFORE)", bg: "#d97706" },
+          after:  { title: "📷 SESUDAH PENANGANAN (AFTER)",  bg: "#10b981" }
+        };
+
+        attHtml = "";
+        groups.forEach(g => {
+          const imgs = grouped[g];
+          if (!imgs || imgs.length === 0) return;
+          const lbl = groupLabels[g];
+          const isAfterGroup = g === "after";
+
+          // Label kategori – page-break-before agar seluruh grup AFTER
+          // selalu dimulai di halaman baru jika konten sebelumnya panjang.
+          const pageBreakStyle = isAfterGroup
+            ? "page-break-before:always;mso-break-type:page-break;"
+            : "";
 
           attHtml += `
-            <tr>
-              ${renderPhotoCard(a1)}
-              <td width="4%" style="width:4%;border:none;padding:0;"></td>
-              ${renderPhotoCard(a2)}
-            </tr>
-            <tr>
-              <td colspan="3" height="12" style="height:12pt;border:none;padding:0;"></td>
-            </tr>`;
-        }
-        attHtml += `</table>`;
+            <div style="${pageBreakStyle}page-break-inside:avoid;">
+              <table width="100%" border="0" cellpadding="0" cellspacing="0"
+                     style="width:100%;border:none;margin-top:${isAfterGroup ? '0' : '10'}pt;">
+                <tr>
+                  <td colspan="3" bgcolor="${lbl.bg}"
+                      style="background-color:${lbl.bg};color:#ffffff;font-size:9pt;font-weight:bold;
+                             padding:6pt 10pt;font-family:Calibri,Arial,sans-serif;border:none;">
+                    ${lbl.title}
+                  </td>
+                </tr>
+                <tr><td colspan="3" height="6" style="height:6pt;border:none;padding:0;"></td></tr>`;
+
+          for (let i = 0; i < imgs.length; i += 2) {
+            const a1 = imgs[i];
+            const a2 = imgs[i + 1] || null;
+            attHtml += `
+                <tr style="page-break-inside:avoid;">
+                  ${renderPhotoCard(a1)}
+                  <td width="4%" style="width:4%;border:none;padding:0;"></td>
+                  ${renderPhotoCard(a2 || null)}
+                </tr>
+                <tr><td colspan="3" height="10" style="height:10pt;border:none;padding:0;"></td></tr>`;
+          }
+          attHtml += `</table></div>`;
+        });
       } else {
         attHtml = `<p style="color:#666;font-style:italic;margin:4pt 0">Tidak ada lampiran foto penanganan pada tiket ini.</p>`;
       }
