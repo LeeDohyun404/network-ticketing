@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>PLN Icon Plus - ICRM+ Network Incident Ticketing</title>
+  <title>Network Incident Ticketing Management Indonesia</title>
   <style>
     :root {
       --bg: #e4f5f8;
@@ -960,7 +960,7 @@
         <img src="/static/logo.jpg" alt="NITM Logo"
           style="width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12);margin-top:2px">
         <div>
-          <h1 style="font-size:1.25rem;margin:0;line-height:1.2">ICRM+ PLN Icon Plus</h1>
+          <h1 style="font-size:1.25rem;margin:0;line-height:1.2">Network Incident Ticketing Management Indonesia</h1>
           <p class="mu" style="margin:2px 0 0;font-size:.82rem">Masuk untuk mengelola tiket gangguan.</p>
         </div>
       </div>
@@ -986,7 +986,7 @@
         <div class="brand-row">
           <img src="/static/logo.jpg" alt="NITM Logo"
             style="width:38px;height:38px;border-radius:6px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.25)">
-          <div>ICRM+<br>PLN Icon Plus</div>
+          <div>PT. NITMI<br>System</div>
         </div>
         <span>Pusat gangguan jaringan</span>
       </div>
@@ -994,9 +994,11 @@
       <button class="nav hide" id="navCust" data-view="pelanggan">Pelanggan</button>
       <button class="nav hide" id="navDev" data-view="perangkat">Perangkat</button>
       <button class="nav hide" id="navMaint" data-view="maintenance">Maintenance</button>
-      <button class="nav hide" id="navNotif" data-view="notifikasi" style="display:flex;align-items:center;justify-content:space-between">
+      <button class="nav hide" id="navNotif" data-view="notifikasi"
+        style="display:flex;align-items:center;justify-content:space-between">
         <span>Notifikasi</span>
-        <span class="tag hide" id="notifBadge" style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:.72rem">0</span>
+        <span class="tag hide" id="notifBadge"
+          style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:.72rem">0</span>
       </button>
       <button class="nav hide" id="navTeam" data-view="teknisi">Teknisi</button>
       <div class="me"><b id="meName"></b><span id="meRole" class="mu"></span><br><button id="logout">Keluar</button>
@@ -1946,7 +1948,7 @@
 </head>
 <body>
   <table>
-    <tr><td colspan="17" class="title">PT NETWORK INCIDENT TICKETING MANAGEMENT (PLN ICON PLUS)</td></tr>
+    <tr><td colspan="17" class="title">PT NETWORK INCIDENT TICKETING MANAGEMENT INDONESIA (NITMI)</td></tr>
     <tr><td colspan="17" class="sub">ICRM+ DAFTAR TIKET GANGGUAN & PEMELIHARAAN JARINGAN</td></tr>
     <tr><td colspan="17" class="meta">Waktu Ekspor: ${nowStr} · Total Data: ${list.length} tiket · Diekspor oleh: ${esc(me ? me.nama : 'Admin')} (${esc(me ? me.role : '')})</td></tr>
     <tr><td colspan="17" style="border:none;height:10px"></td></tr>
@@ -2059,7 +2061,7 @@
         }));
 
         // Kelompokkan gambar per kategori: umum, before, after
-        const groups = ["before","umum","after"];
+        const groups = ["before", "umum", "after"];
         const grouped = {};
         groups.forEach(g => { grouped[g] = uniformImages.filter(a => a.jenis === g); });
 
@@ -2102,9 +2104,9 @@
         // dibungkus dalam satu blok page-break-inside:avoid agar header+gambar
         // tidak terpisah antar halaman Word.
         const groupLabels = {
-          umum:   { title: "📷 DOKUMENTASI UMUM LAPANGAN",   bg: "#1a6478" },
+          umum: { title: "📷 DOKUMENTASI UMUM LAPANGAN", bg: "#1a6478" },
           before: { title: "📷 SEBELUM PENANGANAN (BEFORE)", bg: "#d97706" },
-          after:  { title: "📷 SESUDAH PENANGANAN (AFTER)",  bg: "#10b981" }
+          after: { title: "📷 SESUDAH PENANGANAN (AFTER)", bg: "#10b981" }
         };
 
         attHtml = "";
@@ -2232,12 +2234,12 @@
     <!-- KOP SURAT -->
     <table style="width:100%;border:none;margin-bottom:6pt">
       <tr>
-        <td style="width:75px;vertical-align:middle;border:none;padding:0 12pt 0 0">
+        <td style="width:75px;vertical-align:top;border:none;padding:0 12pt 0 0">
           ${logoDataUrl ? `<img src="${logoDataUrl}" width="65" height="65" alt="Logo NITM">` : ""}
         </td>
-        <td style="vertical-align:middle;border:none;padding:0">
-          <div style="font-size:15pt;font-weight:bold;color:#1a6478;letter-spacing:.02em">PT NETWORK INCIDENT TICKETING MANAGEMENT</div>
-          <div style="font-size:12pt;font-weight:bold;color:#07aab8;margin-top:1pt">NITM - NETWORK TICKETING SYSTEM</div>
+        <td style="vertical-align:top;border:none;padding:0">
+          <div style="font-size:15pt;font-weight:bold;color:#1a6478;letter-spacing:.02em">PT NETWORK INCIDENT TICKETING MANAGEMENT INDONESIA</div>
+          <div style="font-size:12pt;font-weight:bold;color:#07aab8;margin-top:1pt">NITMI - NETWORK TICKETING SYSTEM</div>
           <div style="font-size:8.5pt;color:#666666;margin-top:2pt">Pusat Pengelolaan Tiket Gangguan, Pemeliharaan & Operasi Jaringan Telekomunikasi</div>
         </td>
         <td style="width:130px;vertical-align:middle;text-align:right;border:none;padding:0">
