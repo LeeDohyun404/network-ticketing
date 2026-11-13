@@ -87,6 +87,10 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 | PUT | /maintenance-schedules/<id> | admin | Ubah rincian / batalkan jadwal pemeliharaan |
 | POST | /maintenance-schedules/<id>/generate-ticket | admin | Buat tiket kerja pemeliharaan (otomatis memajukan pengulangan) |
 | DELETE | /maintenance-schedules/<id> | admin | Hapus jadwal pemeliharaan |
+| POST | /tickets/<id>/attachments | admin/teknisi | Upload foto lampiran tiket (base64, maks 2 MB, JPEG/PNG/WebP/GIF, maks 5 per tiket) |
+| GET | /tickets/<id>/attachments | login | Daftar metadata lampiran tiket |
+| GET | /attachments/<id> | login | Ambil data lampiran beserta base64 gambar |
+| DELETE | /attachments/<id> | admin/pengunggah | Hapus lampiran tiket |
 
 Header untuk endpoint terlindungi: `Authorization: Bearer <token>`.
 

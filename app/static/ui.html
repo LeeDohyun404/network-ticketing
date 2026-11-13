@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>PLN Icon Plus</title>
+  <title>PLN Icon Plus - Network Incident Ticketing</title>
   <style>
     :root {
       --bg: #e4f5f8;
@@ -814,6 +814,120 @@
         transition: none !important
       }
     }
+
+    /* lampiran foto */
+    .att-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0
+    }
+
+    .att-thumb {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: var(--r);
+      overflow: hidden;
+      border: 1px solid var(--ln);
+      cursor: pointer;
+      flex-shrink: 0
+    }
+
+    .att-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    .att-thumb .att-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      font-size: .68rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 2px 0;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: .04em
+    }
+
+    .att-thumb .att-label.before { background: var(--amb) }
+    .att-thumb .att-label.after  { background: var(--grn) }
+    .att-thumb .att-label.umum   { background: var(--mu) }
+
+    .att-thumb .att-del {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0,0,0,.55);
+      color: #fff;
+      border: 0;
+      font-size: .75rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1
+    }
+
+    .att-thumb:hover .att-del { display: flex }
+
+    .att-upload {
+      width: 80px;
+      height: 80px;
+      border: 2px dashed var(--ln);
+      border-radius: var(--r);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: .72rem;
+      color: var(--mu);
+      cursor: pointer;
+      flex-shrink: 0;
+      gap: 4px
+    }
+
+    .att-upload:hover { border-color: var(--ac); color: var(--ac) }
+
+    #attLightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center
+    }
+
+    #attLightbox.open { display: flex }
+
+    #attLightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 6px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.6)
+    }
+
+    #attLightbox button {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      background: rgba(255,255,255,.15);
+      border: 0;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px
+    }
   </style>
 </head>
 
@@ -840,7 +954,7 @@
 
   <div id="shell" class="hide">
     <aside>
-      <div class="brand">Network Incident<br>Ticketing<span>Pusat gangguan jaringan</span></div>
+      <div class="brand">ICRM+<br>PLN Icon Plus<span>Pusat gangguan jaringan</span></div>
       <button class="nav on" data-view="tiket">Tiket</button>
       <button class="nav hide" id="navCust" data-view="pelanggan">Pelanggan</button>
       <button class="nav hide" id="navDev" data-view="perangkat">Perangkat</button>
@@ -1004,6 +1118,12 @@
   </div>
 
   <aside id="drawer" aria-label="Detail tiket"></aside>
+
+  <!-- Lightbox lampiran -->
+  <div id="attLightbox">
+    <button onclick="document.getElementById('attLightbox').classList.remove('open')" aria-label="Tutup">✕</button>
+    <img id="attLbImg" src="" alt="Lampiran">
+  </div>
 
   <dialog id="dNew">
     <h3>Tiket baru</h3>
@@ -1286,42 +1406,97 @@
       const resInfo = t.sla.penyelesaian_menit != null ? fmt(t.sla.penyelesaian_menit) : (t.sla.sisa_penyelesaian_menit < 0 ? `Lewat ${-t.sla.sisa_penyelesaian_menit}m` : `Sisa ${t.sla.sisa_penyelesaian_menit}m`);
       function fmtLog(l) {
         let h = "";
-        if (l.aksi === "penugasan") h = `👤 Ditugaskan: <b>${esc(l.nilai_lama || "–")} → ${esc(l.nilai_baru)}</b>`;
-        else if (l.aksi === "prioritas") h = `⚡ Prioritas: <b>${esc(l.nilai_lama)} → ${esc(l.nilai_baru)}</b>`;
-        else if (l.aksi === "edit") h = `✏️ Edit ${esc(l.field_diubah)}: <span class="mu">${esc(l.nilai_lama || "–")}</span> → <b>${esc(l.nilai_baru)}</b>`;
-        else h = `🔄 Status: <b>${ST[l.status_lama] || esc(l.status_lama)} → ${ST[l.status_baru] || esc(l.status_baru)}</b>`;
-        const by = l.nama_pengubah ? ` · oleh ${esc(l.nama_pengubah)}` : "";
+        if (l.aksi === "penugasan") h = `👤 Ditugaskan: <b>${esc(l.nilai_lama || "\u2013")} \u2192 ${esc(l.nilai_baru)}</b>`;
+        else if (l.aksi === "prioritas") h = `\u26a1 Prioritas: <b>${esc(l.nilai_lama)} \u2192 ${esc(l.nilai_baru)}</b>`;
+        else if (l.aksi === "edit") h = `\u270f\ufe0f Edit ${esc(l.field_diubah)}: <span class="mu">${esc(l.nilai_lama || "\u2013")}</span> \u2192 <b>${esc(l.nilai_baru)}</b>`;
+        else h = `\U0001f504 Status: <b>${ST[l.status_lama] || esc(l.status_lama)} \u2192 ${ST[l.status_baru] || esc(l.status_baru)}</b>`;
+        const by = l.nama_pengubah ? ` \u00b7 oleh ${esc(l.nama_pengubah)}` : "";
         return `<li>${h}<div class="mu">${when(l.waktu)}${by}</div>${l.catatan ? `<div>${esc(l.catatan)}</div>` : ""}</li>`;
+      }
+      // Ambil lampiran
+      let atts = [];
+      try { atts = (await api("GET", `/tickets/${t.id}/attachments`)).lampiran; } catch(e) {}
+      const canUpload = role === "admin" || t.ditugaskan_ke === me;
+      function attThumbHtml(a) {
+        const delBtn = canUpload ? `<button class="att-del" data-aid="${a.id}" title="Hapus lampiran" aria-label="Hapus">\u2715</button>` : "";
+        const src = a.data ? `data:${esc(a.mime_type)};base64,${a.data}` : "";
+        return `<div class="att-thumb"><img src="${src}" alt="${esc(a.nama_file)}" loading="lazy" data-aid="${a.id}"><span class="att-label ${esc(a.jenis)}">${esc(a.jenis)}</span>${delBtn}</div>`;
+      }
+      function buildGrid(list) {
+        const thumbs = list.map(a => attThumbHtml(a)).join("");
+        const uploadBtn = canUpload && list.length < 5
+          ? `<label class="att-upload" title="Tambah foto">\U0001f4f7<span>Tambah foto</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hide" id="attFile"></label>`
+          : "";
+        return `<div class="att-grid" id="attGrid">${thumbs}${uploadBtn}</div>`;
       }
       $("drawer").innerHTML = `<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><button class="btn sm sec" id="dclose">Tutup</button></div>
    <h2 style="margin:8px 0">${esc(t.judul)}</h2><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span> <span class="tag s-${esc(t.status)}">${ST[t.status]}</span>
    ${t.sla.melewati_sla ? `<span class="tag sla-bad" style="margin-left:4px">Melewati SLA</span>` : ""}
    <p class="mu">${esc(t.deskripsi || "Tanpa deskripsi")}</p>
-   <dl class="meta"><dt>Pelanggan</dt><dd>${esc(t.pelanggan)}</dd><dt>Jenis</dt><dd>${esc(t.jenis)}</dd><dt>Perangkat</dt><dd>${esc(t.perangkat || "–")}</dd><dt>Lokasi</dt><dd>${esc(t.lokasi || "–")}</dd><dt>Teknisi</dt><dd>${techName(t.ditugaskan_ke)}</dd><dt>Dibuat</dt><dd>${when(t.created_at)}</dd></dl>
+   <dl class="meta"><dt>Pelanggan</dt><dd>${esc(t.pelanggan)}</dd><dt>Jenis</dt><dd>${esc(t.jenis)}</dd><dt>Perangkat</dt><dd>${esc(t.perangkat || "\u2013")}</dd><dt>Lokasi</dt><dd>${esc(t.lokasi || "\u2013")}</dd><dt>Teknisi</dt><dd>${techName(t.ditugaskan_ke)}</dd><dt>Dibuat</dt><dd>${when(t.created_at)}</dd></dl>
    <div class="kpi">
      <div><span class="mu">Target Respons</span><b class="num">${t.sla.target_respons_menit}m</b></div>
      <div><span class="mu">Target Selesai</span><b class="num">${t.sla.target_penyelesaian_menit}m</b></div>
      <div><span class="mu">Waktu Respons</span><b class="num">${respInfo}</b>${t.sla.melewati_sla_respons ? ` <span class="tag sla-bad" style="font-size:.7rem">Lewat</span>` : ""}</div>
      <div><span class="mu">Waktu Penyelesaian</span><b class="num">${resInfo}</b>${t.sla.melewati_sla_penyelesaian ? ` <span class="tag sla-bad" style="font-size:.7rem">Lewat</span>` : ""}</div>
    </div>
+   <h3 style="margin:18px 0 4px">\U0001f4f7 Lampiran Foto</h3>
+   ${buildGrid([])}
    <h3 style="margin:18px 0 4px">Komentar Penanganan</h3>
    <div id="cmtList" style="margin-bottom:12px">
      ${(t.komentar && t.komentar.length) ? `<ul class="tl">${t.komentar.map(c => `<li><b>${esc(c.nama_penulis || 'Pengguna')} <span class="mu" style="font-size:.75rem">(${esc(c.role_penulis || '')})</span></b><div class="mu">${when(c.created_at)}</div><div style="margin-top:2px;white-space:pre-wrap">${esc(c.pesan)}</div></li>`).join("")}</ul>` : `<p class="mu">Belum ada komentar.</p>`}
    </div>
    <div class="f" style="margin-top:10px">
-     <textarea id="cmtText" rows="2" placeholder="Tulis komentar penanganan…" maxlength="2000"></textarea>
+     <textarea id="cmtText" rows="2" placeholder="Tulis komentar penanganan\u2026" maxlength="2000"></textarea>
      <button class="btn sm" id="cmtBtn" style="margin-top:6px">Kirim Komentar</button>
    </div>
    <h3 style="margin:18px 0 4px">Riwayat Audit</h3>`+ (t.logs.length ? `<ul class="tl">${t.logs.map(fmtLog).join("")}</ul>` : `<p class="mu">Belum ada perubahan tercatat.</p>`);
       $("drawer").classList.add("open"); $("dclose").onclick = () => $("drawer").classList.remove("open");
+      // --- Load & bind lampiran ---
+      async function reloadAtts() {
+        const grid = $("attGrid"); if (!grid) return;
+        try {
+          const list = (await api("GET", `/tickets/${t.id}/attachments`)).lampiran;
+          const withData = await Promise.all(list.map(a => api("GET", `/attachments/${a.id}`)));
+          const uploadBtn = canUpload && withData.length < 5
+            ? `<label class="att-upload" title="Tambah foto">\U0001f4f7<span>Tambah foto</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hide" id="attFile"></label>`
+            : "";
+          grid.innerHTML = withData.map(a => attThumbHtml(a)).join("") + uploadBtn;
+          grid.previousElementSibling.textContent = `\U0001f4f7 Lampiran Foto (${withData.length}/5)`;
+        } catch(e) {}
+        bindAttEvents();
+      }
+      function bindAttEvents() {
+        const grid = $("attGrid"); if (!grid) return;
+        grid.querySelectorAll(".att-thumb img").forEach(img => {
+          img.style.cursor = "zoom-in";
+          img.onclick = () => { $("attLbImg").src = img.src; $("attLightbox").classList.add("open"); };
+        });
+        const fi = $("attFile");
+        if (fi) fi.onchange = async () => {
+          const file = fi.files[0]; if (!file) return;
+          if (file.size > 2097152) { toast("Ukuran file melebihi 2 MB", false); return; }
+          if (!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)) { toast("Format tidak didukung (JPEG/PNG/WebP/GIF)", false); return; }
+          const jenis = prompt("Jenis foto:\nbefore = sebelum penanganan\nafter = sesudah\numum = dokumentasi umum", "umum");
+          if (!jenis || !["before","after","umum"].includes(jenis.trim())) { toast("Jenis harus: before, after, atau umum", false); return; }
+          const b64 = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result.split(",")[1]); r.readAsDataURL(file); });
+          await run(api("POST", `/tickets/${t.id}/attachments`, { nama_file: file.name, mime_type: file.type, data: b64, jenis: jenis.trim() })
+            .then(() => { toast("Foto berhasil diunggah", true); reloadAtts(); }));
+        };
+        grid.querySelectorAll(".att-del").forEach(btn => {
+          btn.onclick = async e => {
+            e.stopPropagation();
+            if (!confirm("Hapus lampiran ini?")) return;
+            await run(api("DELETE", `/attachments/${btn.dataset.aid}`).then(() => { toast("Lampiran dihapus", true); reloadAtts(); }));
+          };
+        });
+      }
+      await reloadAtts();
       $("cmtBtn").onclick = () => run((async () => {
-        const txt = $("cmtText").value.trim();
-        if (!txt) return;
+        const txt = $("cmtText").value.trim(); if (!txt) return;
         await api("POST", `/tickets/${t.id}/comments`, { pesan: txt });
-        $("cmtText").value = "";
-        toast("Komentar ditambahkan", true);
-        const updated = await api("GET", `/tickets/${t.id}`);
-        openDetail(updated);
+        $("cmtText").value = ""; toast("Komentar ditambahkan", true);
+        openDetail(t.id);
       })());
     }
     document.addEventListener("keydown", e => { if (e.key === "Escape") $("drawer").classList.remove("open") });

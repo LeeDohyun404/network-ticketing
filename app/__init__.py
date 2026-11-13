@@ -54,11 +54,13 @@ def create_app(test_config=None):
     from .routes.tickets import bp as tickets_bp
     from .routes.customers import bp as customers_bp
     from .routes.maintenance import bp as maintenance_bp
+    from .routes.attachments import bp as attachments_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tickets_bp)
     app.register_blueprint(customers_bp)
     app.register_blueprint(maintenance_bp)
+    app.register_blueprint(attachments_bp)
 
     @app.get("/")
     def index():
@@ -122,6 +124,19 @@ def create_app(test_config=None):
                         status VARCHAR(20) NOT NULL DEFAULT 'terjadwal',
                         last_ticket_id INTEGER REFERENCES tickets(id),
                         dibuat_oleh INTEGER NOT NULL REFERENCES users(id),
+                        created_at TIMESTAMP NOT NULL
+                    );
+                """))
+                # Tabel ticket_attachments (Fitur 6)
+                conn.execute(db.text("""
+                    CREATE TABLE IF NOT EXISTS ticket_attachments (
+                        id SERIAL PRIMARY KEY,
+                        ticket_id INTEGER NOT NULL REFERENCES tickets(id),
+                        nama_file VARCHAR(200) NOT NULL,
+                        mime_type VARCHAR(50) NOT NULL,
+                        data TEXT NOT NULL,
+                        jenis VARCHAR(20) NOT NULL DEFAULT 'umum',
+                        diunggah_oleh INTEGER NOT NULL REFERENCES users(id),
                         created_at TIMESTAMP NOT NULL
                     );
                 """))

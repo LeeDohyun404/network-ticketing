@@ -5,6 +5,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from .extensions import db
 
 ROLES = ("admin", "teknisi")
+ATTACHMENT_TYPES = ("before", "after", "umum")
+ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024   # 2 MB
+MAX_ATTACHMENTS_PER_TICKET = 5
 TICKET_TYPES = ("gangguan", "pemeliharaan")
 PRIORITIES = ("rendah", "sedang", "tinggi", "kritis")
 PRIORITY_RANK = {name: i for i, name in enumerate(PRIORITIES)}
@@ -152,6 +156,7 @@ class Ticket(db.Model):
 
     logs = db.relationship("TicketLog", backref="ticket", order_by="TicketLog.id", cascade="all, delete-orphan")
     comments = db.relationship("TicketComment", backref="ticket", order_by="TicketComment.id.asc()", cascade="all, delete-orphan")
+    attachments = db.relationship("TicketAttachment", backref="ticket", order_by="TicketAttachment.id", cascade="all, delete-orphan")
 
     def __init__(self, judul="", deskripsi="", pelanggan="", jenis="gangguan", perangkat="",
                  lokasi="", prioritas="sedang", status="open", dibuat_oleh=None, ditugaskan_ke=None,
@@ -327,6 +332,50 @@ class TicketComment(db.Model):
             "pesan": self.pesan,
             "created_at": self.created_at.isoformat(),
         }
+
+
+class TicketAttachment(db.Model):
+    __tablename__ = "ticket_attachments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey("tickets.id"), nullable=False, index=True)
+    nama_file = db.Column(db.String(200), nullable=False)
+    mime_type = db.Column(db.String(50), nullable=False)
+    data = db.Column(db.Text, nullable=False)          # base64-encoded
+    jenis = db.Column(db.String(20), nullable=False, default="umum")   # before/after/umum
+    diunggah_oleh = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+
+    uploader = db.relationship("User", backref="attachments")
+
+    def __init__(self, ticket_id=None, nama_file="", mime_type="", data="",
+                 jenis="umum", diunggah_oleh=None, created_at=None, **kwargs):
+        super().__init__(**kwargs)
+        if ticket_id is not None:
+            self.ticket_id = ticket_id
+        self.nama_file = nama_file
+        self.mime_type = mime_type
+        self.data = data
+        self.jenis = jenis
+        if diunggah_oleh is not None:
+            self.diunggah_oleh = diunggah_oleh
+        if created_at is not None:
+            self.created_at = created_at
+
+    def to_dict(self, with_data=False):
+        d = {
+            "id": self.id,
+            "ticket_id": self.ticket_id,
+            "nama_file": self.nama_file,
+            "mime_type": self.mime_type,
+            "jenis": self.jenis,
+            "diunggah_oleh": self.diunggah_oleh,
+            "nama_pengunggah": self.uploader.nama if self.uploader else None,
+            "created_at": self.created_at.isoformat(),
+        }
+        if with_data:
+            d["data"] = self.data
+        return d
 
 
 class Invitation(db.Model):
