@@ -2213,7 +2213,7 @@
         logsHtml = `<p style="color:#666;font-style:italic;margin:4pt 0">Belum ada riwayat audit tercatat.</p>`;
       }
 
-      const wordDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      const wordDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns:v='urn:schemas-microsoft-com:vml' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
   <meta charset='utf-8'>
   <title>Laporan Tiket #${t.id} - ${esc(t.judul)}</title>
@@ -2234,8 +2234,15 @@
     <!-- KOP SURAT -->
     <table style="width:100%;border:none;margin-bottom:6pt">
       <tr>
-        <td style="width:75px;vertical-align:top;border:none;padding:0 12pt 0 0">
-          ${logoDataUrl ? `<img src="${logoDataUrl}" width="65" height="65" alt="Logo NITM">` : ""}
+        <td style="width:80px;vertical-align:top;border:none;padding:0 12pt 0 0">
+          ${logoDataUrl ? `
+          <!--[if gte vml 1]><v:image id="logoNITM"
+            style="width:65pt;height:65pt;mso-wrap-style:square;vertical-align:top;"
+            src="${logoDataUrl}" o:title="Logo NITM"/>
+          <![endif]-->
+          <!--[if !vml]--><img src="${logoDataUrl}" width="65" height="65" border="0"
+            style="vertical-align:top;" alt="Logo NITM"><!--[endif]-->
+          ` : ""}
         </td>
         <td style="vertical-align:top;border:none;padding:0">
           <div style="font-size:15pt;font-weight:bold;color:#1a6478;letter-spacing:.02em">PT NETWORK INCIDENT TICKETING MANAGEMENT INDONESIA</div>
