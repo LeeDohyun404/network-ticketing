@@ -101,6 +101,8 @@ def create_app(test_config=None):
                 conn.execute(db.text("ALTER TABLE ticket_logs ADD COLUMN IF NOT EXISTS field_diubah VARCHAR(50);"))
                 conn.execute(db.text("ALTER TABLE ticket_logs ADD COLUMN IF NOT EXISTS nilai_lama TEXT;"))
                 conn.execute(db.text("ALTER TABLE ticket_logs ADD COLUMN IF NOT EXISTS nilai_baru TEXT;"))
+                # Kolom devices: customer_id nullable (untuk perangkat infrastruktur mandiri)
+                conn.execute(db.text("ALTER TABLE devices ALTER COLUMN customer_id DROP NOT NULL;"))
                 conn.commit()
         except Exception:
             pass

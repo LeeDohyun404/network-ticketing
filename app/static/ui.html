@@ -110,6 +110,7 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
     <div class="brand">Network Incident<br>Ticketing<span>Pusat gangguan jaringan</span></div>
     <button class="nav on" data-view="tiket">Tiket</button>
     <button class="nav hide" id="navCust" data-view="pelanggan">Pelanggan</button>
+    <button class="nav hide" id="navDev" data-view="perangkat">Perangkat</button>
     <button class="nav hide" id="navTeam" data-view="teknisi">Teknisi</button>
     <div class="me"><b id="meName"></b><span id="meRole" class="mu"></span><br><button id="logout">Keluar</button></div>
   </aside>
@@ -133,9 +134,14 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
         <div class="empty hide" id="invEmpty">Tidak ada undangan yang tertunda.</div></div>
     </section>
     <section id="vPelanggan" class="hide">
-      <div class="head"><h2>Master Pelanggan & Perangkat</h2><button class="btn" id="addCustBtn">+ Tambah Pelanggan</button></div>
-      <div class="panel"><div class="scroll"><table><thead><tr><th>#</th><th>Nama Pelanggan</th><th>Alamat</th><th>Kontak</th><th>Jumlah Perangkat</th><th>Aksi</th></tr></thead><tbody id="custRows"></tbody></table></div>
+      <div class="head"><h2>Master Pelanggan</h2><button class="btn" id="addCustBtn">+ Tambah Pelanggan</button></div>
+      <div class="panel"><div class="scroll"><table><thead><tr><th>#</th><th>Nama Pelanggan</th><th>Alamat</th><th>Kontak</th><th>Aksi</th></tr></thead><tbody id="custRows"></tbody></table></div>
         <div class="empty hide" id="custEmpty">Belum ada pelanggan terdaftar. Klik "+ Tambah Pelanggan" untuk menambahkan.</div></div>
+    </section>
+    <section id="vPerangkat" class="hide">
+      <div class="head"><h2>Master Perangkat Jaringan</h2><button class="btn" id="addDevBtn">+ Tambah Perangkat</button></div>
+      <div class="panel"><div class="scroll"><table><thead><tr><th>#</th><th>Nama Perangkat</th><th>Jenis</th><th>Lokasi Lapangan</th><th>Pelanggan</th><th>Aksi</th></tr></thead><tbody id="devRows"></tbody></table></div>
+        <div class="empty hide" id="devEmpty">Belum ada perangkat terdaftar. Klik "+ Tambah Perangkat" untuk menambahkan.</div></div>
     </section>
   </main>
 </div>
@@ -173,16 +179,15 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
   <div class="f"><label for="c_kontak">Kontak / No. Telp</label><input id="c_kontak" placeholder="08123456789"></div>
   <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="saveCustBtn">Simpan Pelanggan</button></div></dialog>
 
-<dialog id="dDev"><h3>Tambah Perangkat untuk <span id="devCustName"></span></h3>
-  <input type="hidden" id="dev_cid">
-  <div class="f"><label for="dev_nama">Nama Perangkat</label><input id="dev_nama" placeholder="Contoh: Router Utama Mikrotik" required></div>
+<dialog id="dDev"><h3 id="devModalTitle">Tambah Perangkat</h3>
+  <div class="f"><label for="dev_nama">Nama Perangkat *</label><input id="dev_nama" placeholder="Contoh: Tiang FO P12 Songgom / OLT Sentral / ONT ZTE" required></div>
   <div class="g2">
     <div class="f"><label for="dev_jenis">Jenis</label>
       <select id="dev_jenis">
+        <option value="tiang_fo">Kabel / Tiang FO</option>
+        <option value="odp">ODP / Closure / FAT</option>
         <option value="ont">ONT / ONU</option>
         <option value="olt">OLT</option>
-        <option value="odp">ODP / Closure / FAT</option>
-        <option value="tiang_fo">Kabel / Tiang FO</option>
         <option value="router">Router</option>
         <option value="switch">Switch</option>
         <option value="access_point">Access Point</option>
@@ -195,6 +200,11 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
     <div class="f"><label for="dev_lokasi">Lokasi Spesifik / Titik Koordinat</label><input id="dev_lokasi" placeholder="Misal: Tiang P12 Jl. Songgom / R. Server"></div>
   </div>
   <div class="f hide" id="f_dev_custom"><label for="dev_jenis_custom">Nama Jenis Perangkat Lainnya</label><input id="dev_jenis_custom" placeholder="Contoh: Radio Wireless / Rectifier"></div>
+  <div class="f"><label for="dev_cid_select">Terhubung ke Pelanggan (opsional)</label>
+    <select id="dev_cid_select">
+      <option value="">– Perangkat Infrastruktur / Jalan (Tanpa Pelanggan Khusus) –</option>
+    </select>
+  </div>
   <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="saveDevBtn">Simpan Perangkat</button></div></dialog>
 
 <dialog id="dSt"><h3 id="stTitle"></h3><div class="f"><label for="st_note">Catatan (opsional)</label><textarea id="st_note" rows="3"></textarea></div>
@@ -251,7 +261,7 @@ function enter(){
   const admin=me.role==="admin";
   $("auth").classList.add("hide");$("shell").classList.remove("hide");
   $("meName").textContent=me.nama;$("meRole").textContent=me.role;
-  ["navCust","navTeam","newBtn","sla"].forEach(i=>$(i).classList.toggle("hide",!admin));
+  ["navCust","navDev","navTeam","newBtn","sla"].forEach(i=>$(i).classList.toggle("hide",!admin));
   run(load());
 }
 document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
@@ -259,16 +269,19 @@ document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
   $("vTiket").classList.toggle("hide",b.dataset.view!=="tiket");
   $("vTeknisi").classList.toggle("hide",b.dataset.view!=="teknisi");
   $("vPelanggan").classList.toggle("hide",b.dataset.view!=="pelanggan");
+  $("vPerangkat").classList.toggle("hide",b.dataset.view!=="perangkat");
   if(b.dataset.view==="teknisi")run(loadTeam());
   if(b.dataset.view==="pelanggan")run(loadCustomersView());
+  if(b.dataset.view==="perangkat")run(loadDevicesView());
 });
 
 /* ---- tiket ---- */
-let customersList=[];
+let customersList=[], allDevicesList=[];
 async function load(){
   if(me.role==="admin"){
     techs=await api("GET","/users?role=teknisi");
     try{customersList=(await api("GET","/customers")).data}catch(e){customersList=[]}
+    try{allDevicesList=(await api("GET","/devices")).data}catch(e){allDevicesList=[]}
   }
   tickets=(await api("GET","/tickets?per_page=100")).data;
   renderPipe();renderRows();
@@ -352,25 +365,31 @@ async function openDetail(id){
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$("drawer").classList.remove("open")});
 $("newBtn").onclick=async()=>{
   $("t_cust").innerHTML='<option value="">– Ketik manual bebas di bawah –</option>'+customersList.map(c=>`<option value="${c.id}">${esc(c.nama)}</option>`).join("");
-  $("t_dev").innerHTML='<option value="">– Pilih perangkat –</option>';
+  $("t_dev").innerHTML='<option value="">– Pilih dari master atau ketik bebas –</option>'+allDevicesList.map(d=>`<option value="${d.id}" data-lok="${esc(d.lokasi||'')}" data-cid="${d.customer_id||''}" data-cname="${esc(d.nama_pelanggan||'')}">${esc(d.nama)} (${esc(d.jenis)})${d.nama_pelanggan?' · '+esc(d.nama_pelanggan):' · Lapangan'}</option>`).join("");
   $("dNew").showModal();
 };
 $("t_cust").onchange=async()=>{
   const cid=$("t_cust").value;
-  $("t_dev").innerHTML='<option value="">– Pilih perangkat –</option>';
-  if(!cid)return;
+  if(!cid){
+    $("t_dev").innerHTML='<option value="">– Pilih dari master atau ketik bebas –</option>'+allDevicesList.map(d=>`<option value="${d.id}" data-lok="${esc(d.lokasi||'')}" data-cid="${d.customer_id||''}" data-cname="${esc(d.nama_pelanggan||'')}">${esc(d.nama)} (${esc(d.jenis)})${d.nama_pelanggan?' · '+esc(d.nama_pelanggan):' · Lapangan'}</option>`).join("");
+    return;
+  }
   const c=customersList.find(x=>x.id==cid);
   if(c)$("t_pelanggan").value=c.nama;
   try{
     const devs=(await api("GET","/devices?customer_id="+cid)).data;
-    $("t_dev").innerHTML='<option value="">– Pilih perangkat –</option>'+devs.map(d=>`<option value="${d.id}" data-lok="${esc(d.lokasi||'')}">${esc(d.nama)} (${esc(d.jenis)})</option>`).join("");
+    $("t_dev").innerHTML='<option value="">– Pilih perangkat pelanggan ini –</option>'+devs.map(d=>`<option value="${d.id}" data-lok="${esc(d.lokasi||'')}">${esc(d.nama)} (${esc(d.jenis)})</option>`).join("");
   }catch(e){}
 };
 $("t_dev").onchange=()=>{
   const opt=$("t_dev").selectedOptions[0];
   if(opt&&opt.value){
-    $("t_perangkat").value=opt.text.replace(/\s*\(.*?\)$/,"");
+    $("t_perangkat").value=opt.text.replace(/\s*\(.*$/,"").trim();
     if(opt.dataset.lok)$("t_lokasi").value=opt.dataset.lok;
+    if(opt.dataset.cid){
+      $("t_cust").value=opt.dataset.cid;
+      if(opt.dataset.cname)$("t_pelanggan").value=opt.dataset.cname;
+    }
   }
 };
 $("createBtn").onclick=()=>{
@@ -424,7 +443,6 @@ async function loadCustomersView(){
     <td><b>${esc(c.nama)}</b></td>
     <td>${esc(c.alamat||"–")}</td>
     <td>${esc(c.kontak||"–")}</td>
-    <td><button class="btn sm sec" data-devlist="${c.id}" data-cname="${esc(c.nama)}">+ Tambah / Lihat Perangkat</button></td>
     <td><button class="btn sm dng" data-delcust="${c.id}" data-cname="${esc(c.nama)}">Hapus</button></td>
   </tr>`).join("");
 }
@@ -438,32 +456,54 @@ $("saveCustBtn").onclick=()=>run((async()=>{
   await api("POST","/customers",{nama,alamat:$("c_alamat").value.trim(),kontak:$("c_kontak").value.trim()});
   $("dCust").close();
   toast("Pelanggan berhasil ditambahkan",true);
-  return loadCustomersView();
+  return Promise.all([loadCustomersView(),load()]);
 })());
 $("custRows").onclick=e=>{
-  const addDev=e.target.closest("[data-devlist]"),del=e.target.closest("[data-delcust]");
-  if(addDev){
-    $("devCustName").textContent=addDev.dataset.cname;
-    $("dev_cid").value=addDev.dataset.devlist;
-    $("dev_nama").value="";$("dev_lokasi").value="";$("dev_jenis").value="ont";
-    $("dev_jenis_custom").value="";$("f_dev_custom").classList.add("hide");
-    $("dDev").showModal();
-  }
+  const del=e.target.closest("[data-delcust]");
   if(del&&confirm("Hapus pelanggan "+del.dataset.cname+"?")){
-    run(api("DELETE","/customers/"+del.dataset.delcust).then(()=>{toast("Pelanggan dihapus",true);return loadCustomersView()}));
+    run(api("DELETE","/customers/"+del.dataset.delcust).then(()=>{toast("Pelanggan dihapus",true);return Promise.all([loadCustomersView(),load()])}));
+  }
+};
+
+/* ---- master perangkat ---- */
+async function loadDevicesView(){
+  const res=await api("GET","/devices");
+  allDevicesList=res.data||[];
+  $("devEmpty").classList.toggle("hide",allDevicesList.length>0);
+  $("devRows").innerHTML=allDevicesList.map((d,i)=>`<tr>
+    <td class="mu">${i+1}</td>
+    <td><b>${esc(d.nama)}</b></td>
+    <td><span class="tag">${esc(d.jenis)}</span></td>
+    <td>${esc(d.lokasi||"–")}</td>
+    <td>${d.nama_pelanggan?`<b>${esc(d.nama_pelanggan)}</b>`:'<span class="mu">Infrastruktur Lapangan</span>'}</td>
+    <td><button class="btn sm dng" data-deldev="${d.id}" data-dname="${esc(d.nama)}">Hapus</button></td>
+  </tr>`).join("");
+}
+$("addDevBtn").onclick=()=>{
+  $("devModalTitle").textContent="Tambah Perangkat";
+  $("dev_nama").value="";$("dev_lokasi").value="";$("dev_jenis").value="tiang_fo";
+  $("dev_jenis_custom").value="";$("f_dev_custom").classList.add("hide");
+  $("dev_cid_select").innerHTML='<option value="">– Perangkat Infrastruktur / Jalan (Tanpa Pelanggan Khusus) –</option>'+customersList.map(c=>`<option value="${c.id}">${esc(c.nama)}</option>`).join("");
+  $("dDev").showModal();
+};
+$("devRows").onclick=e=>{
+  const del=e.target.closest("[data-deldev]");
+  if(del&&confirm("Hapus perangkat "+del.dataset.dname+"?")){
+    run(api("DELETE","/devices/"+del.dataset.deldev).then(()=>{toast("Perangkat dihapus",true);return Promise.all([loadDevicesView(),load()])}));
   }
 };
 $("dev_jenis").onchange=()=>{$("f_dev_custom").classList.toggle("hide",$("dev_jenis").value!=="lainnya")};
 $("saveDevBtn").onclick=()=>run((async()=>{
-  const cid=+$("dev_cid").value;
   const nama=$("dev_nama").value.trim();
   if(!nama)throw new Error("Nama perangkat wajib diisi");
   let j=$("dev_jenis").value;
   if(j==="lainnya"){j=$("dev_jenis_custom").value.trim()||"lainnya"}
-  await api("POST","/devices",{customer_id:cid,nama,jenis:j,lokasi:$("dev_lokasi").value.trim()});
+  const payload={nama,jenis:j,lokasi:$("dev_lokasi").value.trim()};
+  if($("dev_cid_select").value)payload.customer_id=+$("dev_cid_select").value;
+  await api("POST","/devices",payload);
   $("dDev").close();
   toast("Perangkat berhasil ditambahkan",true);
-  return loadCustomersView();
+  return Promise.all([loadDevicesView(),load()]);
 })());
 
 checkActivation();

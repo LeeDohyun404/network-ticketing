@@ -102,7 +102,7 @@ class Device(db.Model):
     nama = db.Column(db.String(150), nullable=False)
     jenis = db.Column(db.String(50), nullable=False, default="router")
     lokasi = db.Column(db.String(200), default="")
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False, index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=True, index=True)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     tickets = db.relationship("Ticket", backref="device_ref", lazy="dynamic")
@@ -112,8 +112,7 @@ class Device(db.Model):
         self.nama = nama
         self.jenis = jenis
         self.lokasi = lokasi
-        if customer_id is not None:
-            self.customer_id = customer_id
+        self.customer_id = customer_id
         if created_at is not None:
             self.created_at = created_at
 
@@ -124,6 +123,7 @@ class Device(db.Model):
             "jenis": self.jenis,
             "lokasi": self.lokasi or "",
             "customer_id": self.customer_id,
+            "nama_pelanggan": self.customer.nama if self.customer else None,
             "created_at": self.created_at.isoformat(),
         }
 

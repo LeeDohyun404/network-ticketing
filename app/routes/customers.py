@@ -46,13 +46,16 @@ def validate_device_data(data, partial=False):
 
     if "customer_id" in data:
         cid = data["customer_id"]
-        if not isinstance(cid, int) or cid <= 0:
-            return None, "customer_id harus berupa angka bulat positif"
-        if not db.session.get(Customer, cid):
-            return None, "Pelanggan tidak ditemukan"
-        clean["customer_id"] = cid
+        if cid is not None and cid != "" and cid != 0:
+            if not isinstance(cid, int) or cid <= 0:
+                return None, "customer_id harus berupa angka bulat positif"
+            if not db.session.get(Customer, cid):
+                return None, "Pelanggan tidak ditemukan"
+            clean["customer_id"] = cid
+        else:
+            clean["customer_id"] = None
     elif not partial:
-        return None, "customer_id wajib diisi"
+        clean["customer_id"] = None
 
     for field, max_len in (("jenis", 50), ("lokasi", 200)):
         if field in data:

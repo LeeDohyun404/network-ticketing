@@ -124,14 +124,26 @@ def test_validasi_gagal_customer_dan_device(client, admin_token):
     # Customer tanpa nama
     assert client.post("/customers", headers=auth(admin_token), json={"alamat": "Jalan Raya"}).status_code == 400
 
-    # Device tanpa customer_id atau tanpa nama
-    assert client.post("/devices", headers=auth(admin_token), json={"nama": "Router"}).status_code == 400
-    assert client.post("/devices", headers=auth(admin_token), json={"customer_id": 99999}).status_code == 400
+    # Device tanpa nama ditolak
+    assert client.post("/devices", headers=auth(admin_token), json={"customer_id": 1}).status_code == 400
+    assert client.post("/devices", headers=auth(admin_token), json={"nama": ""}).status_code == 400
 
     # Customer tidak ditemukan
     assert client.post("/devices", headers=auth(admin_token), json={
         "nama": "Router", "customer_id": 99999
     }).status_code == 400
+
+    # Device mandiri tanpa customer_id BERHASIL (perangkat jalan / infrastruktur umum)
+    r_mandiri = client.post("/devices", headers=auth(admin_token), json={
+        "nama": "Tiang FO P12 Songgom",
+        "jenis": "tiang_fo",
+        "lokasi": "Jl. Raya Songgom Km 3",
+    })
+    assert r_mandiri.status_code == 201
+    dev_mandiri = r_mandiri.get_json()
+    assert dev_mandiri["customer_id"] is None
+    assert dev_mandiri["nama_pelanggan"] is None
+    assert dev_mandiri["nama"] == "Tiang FO P12 Songgom"
 
     # Tiket dengan customer_id tidak valid
     assert client.post("/tickets", headers=auth(admin_token), json={

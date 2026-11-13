@@ -74,12 +74,12 @@ def validate(data, partial=False):
             dev = db.session.get(Device, did)
             if not dev:
                 return None, "Perangkat tidak ditemukan"
-            if clean.get("customer_id") and dev.customer_id != clean["customer_id"]:
+            if clean.get("customer_id") and dev.customer_id and dev.customer_id != clean["customer_id"]:
                 return None, "Perangkat tidak terdaftar pada pelanggan ini"
             clean["device_id"] = dev.id
-            if not clean.get("customer_id"):
+            if not clean.get("customer_id") and dev.customer_id:
                 clean["customer_id"] = dev.customer_id
-                if not clean.get("pelanggan"):
+                if not clean.get("pelanggan") and dev.customer:
                     clean["pelanggan"] = dev.customer.nama
             if not clean.get("perangkat"):
                 clean["perangkat"] = dev.nama
