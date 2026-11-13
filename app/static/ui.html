@@ -109,6 +109,7 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
   <aside>
     <div class="brand">Network Incident<br>Ticketing<span>Pusat gangguan jaringan</span></div>
     <button class="nav on" data-view="tiket">Tiket</button>
+    <button class="nav hide" id="navCust" data-view="pelanggan">Pelanggan</button>
     <button class="nav hide" id="navTeam" data-view="teknisi">Teknisi</button>
     <div class="me"><b id="meName"></b><span id="meRole" class="mu"></span><br><button id="logout">Keluar</button></div>
   </aside>
@@ -130,6 +131,11 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
       <h3 style="margin:0 0 8px">Menunggu aktivasi</h3>
       <div class="panel"><div class="scroll"><table><thead><tr><th>Nama</th><th>Email</th><th>Tautan</th><th>Aksi</th></tr></thead><tbody id="invRows"></tbody></table></div>
         <div class="empty hide" id="invEmpty">Tidak ada undangan yang tertunda.</div></div>
+    </section>
+    <section id="vPelanggan" class="hide">
+      <div class="head"><h2>Master Pelanggan & Perangkat</h2><button class="btn" id="addCustBtn">+ Tambah Pelanggan</button></div>
+      <div class="panel"><div class="scroll"><table><thead><tr><th>#</th><th>Nama Pelanggan</th><th>Alamat</th><th>Kontak</th><th>Jumlah Perangkat</th><th>Aksi</th></tr></thead><tbody id="custRows"></tbody></table></div>
+        <div class="empty hide" id="custEmpty">Belum ada pelanggan terdaftar. Klik "+ Tambah Pelanggan" untuk menambahkan.</div></div>
     </section>
   </main>
 </div>
@@ -156,6 +162,21 @@ dialog{padding:18px;max-height:92vh;overflow:auto}
 
 <dialog id="dLink"><h3>Email belum terkirim</h3><p id="linkNote" class="mu"></p><div class="link" id="linkVal"></div>
   <div class="dact"><button class="btn sec" data-close>Tutup</button><button class="btn" id="copyBtn">Salin tautan</button></div></dialog>
+
+<dialog id="dCust"><h3>Tambah Pelanggan</h3>
+  <div class="f"><label for="c_nama">Nama Pelanggan / Instansi</label><input id="c_nama" placeholder="Contoh: SMA Negeri 1 Songgom" required></div>
+  <div class="f"><label for="c_alamat">Alamat</label><input id="c_alamat" placeholder="Jl. Raya Songgom No. 12"></div>
+  <div class="f"><label for="c_kontak">Kontak / No. Telp</label><input id="c_kontak" placeholder="08123456789"></div>
+  <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="saveCustBtn">Simpan Pelanggan</button></div></dialog>
+
+<dialog id="dDev"><h3>Tambah Perangkat untuk <span id="devCustName"></span></h3>
+  <input type="hidden" id="dev_cid">
+  <div class="f"><label for="dev_nama">Nama Perangkat</label><input id="dev_nama" placeholder="Contoh: Router Utama Mikrotik" required></div>
+  <div class="g2">
+    <div class="f"><label for="dev_jenis">Jenis</label><select id="dev_jenis"><option>router</option><option>switch</option><option>access_point</option><option>modem</option><option>server</option></select></div>
+    <div class="f"><label for="dev_lokasi">Lokasi Spesifik</label><input id="dev_lokasi" placeholder="Ruang Server Lt. 2"></div>
+  </div>
+  <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="saveDevBtn">Simpan Perangkat</button></div></dialog>
 
 <dialog id="dSt"><h3 id="stTitle"></h3><div class="f"><label for="st_note">Catatan (opsional)</label><textarea id="st_note" rows="3"></textarea></div>
   <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="stBtn">Simpan</button></div></dialog>
@@ -211,13 +232,16 @@ function enter(){
   const admin=me.role==="admin";
   $("auth").classList.add("hide");$("shell").classList.remove("hide");
   $("meName").textContent=me.nama;$("meRole").textContent=me.role;
-  ["navTeam","newBtn","sla"].forEach(i=>$(i).classList.toggle("hide",!admin));
+  ["navCust","navTeam","newBtn","sla"].forEach(i=>$(i).classList.toggle("hide",!admin));
   run(load());
 }
 document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
   document.querySelectorAll(".nav").forEach(n=>n.classList.toggle("on",n===b));
-  $("vTiket").classList.toggle("hide",b.dataset.view!=="tiket");$("vTeknisi").classList.toggle("hide",b.dataset.view!=="teknisi");
+  $("vTiket").classList.toggle("hide",b.dataset.view!=="tiket");
+  $("vTeknisi").classList.toggle("hide",b.dataset.view!=="teknisi");
+  $("vPelanggan").classList.toggle("hide",b.dataset.view!=="pelanggan");
   if(b.dataset.view==="teknisi")run(loadTeam());
+  if(b.dataset.view==="pelanggan")run(loadCustomersView());
 });
 
 /* ---- tiket ---- */
@@ -370,6 +394,55 @@ $("techRows").onclick=e=>{const b=e.target.closest("[data-ut]");
   if(b&&confirm("Hapus teknisi "+b.dataset.n+"? Tiket yang ditugaskan kepadanya menjadi belum ditugaskan."))
     run(api("DELETE","/users/"+b.dataset.ut).then(()=>{toast("Teknisi dihapus",true);return load().then(loadTeam)}))};
 $("copyBtn").onclick=()=>navigator.clipboard.writeText($("linkVal").textContent).then(()=>toast("Tautan disalin",true));
+
+/* ---- master pelanggan & perangkat ---- */
+async function loadCustomersView(){
+  const res=await api("GET","/customers");
+  customersList=res.data||[];
+  $("custEmpty").classList.toggle("hide",customersList.length>0);
+  $("custRows").innerHTML=customersList.map((c,i)=>`<tr>
+    <td class="mu">${i+1}</td>
+    <td><b>${esc(c.nama)}</b></td>
+    <td>${esc(c.alamat||"–")}</td>
+    <td>${esc(c.kontak||"–")}</td>
+    <td><button class="btn sm sec" data-devlist="${c.id}" data-cname="${esc(c.nama)}">+ Tambah / Lihat Perangkat</button></td>
+    <td><button class="btn sm dng" data-delcust="${c.id}" data-cname="${esc(c.nama)}">Hapus</button></td>
+  </tr>`).join("");
+}
+$("addCustBtn").onclick=()=>{
+  $("c_nama").value="";$("c_alamat").value="";$("c_kontak").value="";
+  $("dCust").showModal();
+};
+$("saveCustBtn").onclick=()=>run((async()=>{
+  const nama=$("c_nama").value.trim();
+  if(!nama)throw new Error("Nama pelanggan wajib diisi");
+  await api("POST","/customers",{nama,alamat:$("c_alamat").value.trim(),kontak:$("c_kontak").value.trim()});
+  $("dCust").close();
+  toast("Pelanggan berhasil ditambahkan",true);
+  return loadCustomersView();
+})());
+$("custRows").onclick=e=>{
+  const addDev=e.target.closest("[data-devlist]"),del=e.target.closest("[data-delcust]");
+  if(addDev){
+    $("devCustName").textContent=addDev.dataset.cname;
+    $("dev_cid").value=addDev.dataset.devlist;
+    $("dev_nama").value="";$("dev_lokasi").value="";
+    $("dDev").showModal();
+  }
+  if(del&&confirm("Hapus pelanggan "+del.dataset.cname+"?")){
+    run(api("DELETE","/customers/"+del.dataset.delcust).then(()=>{toast("Pelanggan dihapus",true);return loadCustomersView()}));
+  }
+};
+$("saveDevBtn").onclick=()=>run((async()=>{
+  const cid=+$("dev_cid").value;
+  const nama=$("dev_nama").value.trim();
+  if(!nama)throw new Error("Nama perangkat wajib diisi");
+  await api("POST","/devices",{customer_id:cid,nama,jenis:$("dev_jenis").value,lokasi:$("dev_lokasi").value.trim()});
+  $("dDev").close();
+  toast("Perangkat berhasil ditambahkan",true);
+  return loadCustomersView();
+})());
+
 checkActivation();
 try{const sv=JSON.parse(sessionStorage.getItem("sess")||"null");
   if(sv&&sv.t&&!new URLSearchParams(location.search).get("aktivasi")){token=sv.t;me=sv.u;enter()}}catch(e){}
