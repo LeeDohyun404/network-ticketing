@@ -149,6 +149,7 @@ class Ticket(db.Model):
     resolved_at = db.Column(db.DateTime, nullable=True)
 
     logs = db.relationship("TicketLog", backref="ticket", order_by="TicketLog.id", cascade="all, delete-orphan")
+    comments = db.relationship("TicketComment", backref="ticket", order_by="TicketComment.id.asc()", cascade="all, delete-orphan")
 
     def __init__(self, judul="", deskripsi="", pelanggan="", jenis="gangguan", perangkat="",
                  lokasi="", prioritas="sedang", status="open", dibuat_oleh=None, ditugaskan_ke=None,
@@ -214,7 +215,7 @@ class Ticket(db.Model):
             "melewati_sla": melewati_resp or melewati_res,
         }
 
-    def to_dict(self, with_logs=False, targets_map=None, now=None):
+    def to_dict(self, with_logs=False, with_comments=False, targets_map=None, now=None):
         data = {
             "id": self.id,
             "judul": self.judul,
@@ -236,6 +237,8 @@ class Ticket(db.Model):
         }
         if with_logs:
             data["logs"] = [log.to_dict() for log in self.logs if log.aksi == "status"]
+        if with_comments or with_logs:
+            data["komentar"] = [c.to_dict() for c in self.comments]
         return data
 
 
@@ -288,6 +291,39 @@ class TicketLog(db.Model):
             "nama_pengubah": self.user.nama if self.user else None,
             "catatan": self.catatan,
             "waktu": self.waktu.isoformat(),
+        }
+
+
+class TicketComment(db.Model):
+    __tablename__ = "ticket_comments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey("tickets.id"), nullable=False, index=True)
+    dibuat_oleh = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    pesan = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+
+    user = db.relationship("User", backref="ticket_comments")
+
+    def __init__(self, ticket_id=None, dibuat_oleh=None, pesan="", created_at=None, **kwargs):
+        super().__init__(**kwargs)
+        if ticket_id is not None:
+            self.ticket_id = ticket_id
+        if dibuat_oleh is not None:
+            self.dibuat_oleh = dibuat_oleh
+        self.pesan = pesan
+        if created_at is not None:
+            self.created_at = created_at
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "ticket_id": self.ticket_id,
+            "dibuat_oleh": self.dibuat_oleh,
+            "nama_penulis": self.user.nama if self.user else None,
+            "role_penulis": self.user.role if self.user else None,
+            "pesan": self.pesan,
+            "created_at": self.created_at.isoformat(),
         }
 
 

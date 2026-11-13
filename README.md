@@ -28,6 +28,8 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 
 **ticket_logs**: id, ticket_id, aksi (`status`, `penugasan`, `prioritas`, `edit`), field_diubah, nilai_lama, nilai_baru, status_lama, status_baru, diubah_oleh (id user), catatan, waktu
 
+**ticket_comments**: id, ticket_id, dibuat_oleh (id user), pesan, created_at
+
 **sla_targets**: id, prioritas (`kritis`, `tinggi`, `sedang`, `rendah` - unik), target_respons_menit, target_penyelesaian_menit
 
 `ticket_logs` dipisah dari `tickets` karena satu tiket bisa berubah status berkali-kali, dan tiap perubahan butuh satu baris catatan sendiri.
@@ -63,6 +65,8 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 | DELETE | /tickets/<id> | admin | Hapus tiket berstatus open |
 | PUT | /tickets/<id>/assign | admin | Tugaskan ke teknisi (`{"teknisi_id": 2}`) |
 | PUT | /tickets/<id>/status | admin atau teknisi yang ditugaskan | Ubah status (`{"status": "...", "catatan": "..."}`) |
+| POST | /tickets/<id>/comments | admin atau teknisi yang ditugaskan | Tambah komentar penanganan (kekal/append-only) |
+| GET | /tickets/<id>/comments | admin atau teknisi yang ditugaskan | Ambil daftar komentar penanganan tiket |
 | GET | /sla-targets | login | Ambil daftar target SLA per prioritas |
 | PUT | /sla-targets/<prioritas> | admin | Perbarui batas waktu respons dan penyelesaian SLA |
 | POST | /customers | admin | Tambah pelanggan baru |

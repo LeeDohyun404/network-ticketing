@@ -286,8 +286,25 @@ async function openDetail(id){
      <div><span class="mu">Waktu Respons</span><b class="num">${respInfo}</b>${t.sla.melewati_sla_respons?` <span class="tag sla-bad" style="font-size:.7rem">Lewat</span>`:""}</div>
      <div><span class="mu">Waktu Penyelesaian</span><b class="num">${resInfo}</b>${t.sla.melewati_sla_penyelesaian?` <span class="tag sla-bad" style="font-size:.7rem">Lewat</span>`:""}</div>
    </div>
+   <h3 style="margin:18px 0 4px">Komentar Penanganan</h3>
+   <div id="cmtList" style="margin-bottom:12px">
+     ${(t.komentar&&t.komentar.length)?`<ul class="tl">${t.komentar.map(c=>`<li><b>${esc(c.nama_penulis||'Pengguna')} <span class="mu" style="font-size:.75rem">(${esc(c.role_penulis||'')})</span></b><div class="mu">${when(c.created_at)}</div><div style="margin-top:2px;white-space:pre-wrap">${esc(c.pesan)}</div></li>`).join("")}</ul>`:`<p class="mu">Belum ada komentar.</p>`}
+   </div>
+   <div class="f" style="margin-top:10px">
+     <textarea id="cmtText" rows="2" placeholder="Tulis komentar penanganan…" maxlength="2000"></textarea>
+     <button class="btn sm" id="cmtBtn" style="margin-top:6px">Kirim Komentar</button>
+   </div>
    <h3 style="margin:18px 0 4px">Riwayat Audit</h3>`+(t.logs.length?`<ul class="tl">${t.logs.map(fmtLog).join("")}</ul>`:`<p class="mu">Belum ada perubahan tercatat.</p>`);
   $("drawer").classList.add("open");$("dclose").onclick=()=>$("drawer").classList.remove("open");
+  $("cmtBtn").onclick=()=>run((async()=>{
+    const txt=$("cmtText").value.trim();
+    if(!txt)return;
+    await api("POST",`/tickets/${t.id}/comments`,{pesan:txt});
+    $("cmtText").value="";
+    toast("Komentar ditambahkan",true);
+    const updated=await api("GET",`/tickets/${t.id}`);
+    openDetail(updated);
+  })());
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$("drawer").classList.remove("open")});
 $("newBtn").onclick=async()=>{

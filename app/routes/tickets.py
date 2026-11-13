@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from ..extensions import db
 from ..models import (PRIORITIES, PRIORITY_RANK, STATUSES, TICKET_TYPES, TRANSITIONS,
-                      Customer, Device, Ticket, TicketLog, SlaTarget, User, minutes_between, utcnow)
+                      Customer, Device, Ticket, TicketLog, TicketComment, SlaTarget, User, minutes_between, utcnow)
 from ..utils import current_user, error, roles_required
 
 bp = Blueprint("tickets", __name__)
@@ -449,3 +449,41 @@ def list_ticket_logs(ticket_id):
 
     logs = query.order_by(TicketLog.waktu.asc(), TicketLog.id.asc()).all()
     return jsonify({"data": [log.to_dict() for log in logs]})
+
+
+@bp.post("/tickets/<int:ticket_id>/comments")
+@roles_required("admin", "teknisi")
+def add_ticket_comment(ticket_id):
+    user = current_user()
+    if user is None:
+        return error("Pengguna tidak ditemukan", 401)
+    ticket = db.session.get(Ticket, ticket_id)
+    if ticket is None or not can_view(user, ticket):
+        return error("Tiket tidak ditemukan", 404)
+
+    data = request.get_json(silent=True) or {}
+    pesan = data.get("pesan")
+    if not isinstance(pesan, str) or not pesan.strip():
+        return error("pesan komentar wajib diisi")
+    pesan = pesan.strip()
+    if len(pesan) > 2000:
+        return error("pesan komentar maksimal 2000 karakter")
+
+    komentar = TicketComment(ticket_id=ticket.id, dibuat_oleh=user.id, pesan=pesan)
+    db.session.add(komentar)
+    db.session.commit()
+    return jsonify(komentar.to_dict()), 201
+
+
+@bp.get("/tickets/<int:ticket_id>/comments")
+@roles_required("admin", "teknisi")
+def list_ticket_comments(ticket_id):
+    user = current_user()
+    if user is None:
+        return error("Pengguna tidak ditemukan", 401)
+    ticket = db.session.get(Ticket, ticket_id)
+    if ticket is None or not can_view(user, ticket):
+        return error("Tiket tidak ditemukan", 404)
+
+    komentar_list = TicketComment.query.filter_by(ticket_id=ticket.id).order_by(TicketComment.created_at.asc(), TicketComment.id.asc()).all()
+    return jsonify({"data": [c.to_dict() for c in komentar_list]})
