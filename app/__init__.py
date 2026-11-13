@@ -87,7 +87,12 @@ def create_app(test_config=None):
         return error("Token sudah kedaluwarsa, silakan login ulang", 401)
 
     with app.app_context():
-        db.create_all()
+        # Otomatis jalankan migrasi database saat startup (sangat penting untuk Postgres Wasmer)
+        try:
+            from flask_migrate import upgrade as flask_migrate_upgrade
+            flask_migrate_upgrade()
+        except Exception:
+            db.create_all()
         from .models import SlaTarget
         SlaTarget.seed_defaults()
 
