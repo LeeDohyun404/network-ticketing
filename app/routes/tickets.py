@@ -243,6 +243,94 @@ def summary():
     })
 
 
+@bp.get("/tickets/export/excel")
+@roles_required("admin", "teknisi")
+def export_tickets_excel():
+    import csv
+    import io
+    from flask import Response
+
+    user = current_user()
+    query = Ticket.query
+    if user.role != "admin":
+        query = query.filter(Ticket.ditugaskan_ke == user.id)
+
+    status = request.args.get("status")
+    prioritas = request.args.get("prioritas")
+    jenis = request.args.get("jenis")
+    if status and status in STATUSES:
+        query = query.filter(Ticket.status == status)
+    if prioritas and prioritas in PRIORITIES:
+        query = query.filter(Ticket.prioritas == prioritas)
+    if jenis and jenis in TICKET_TYPES:
+        query = query.filter(Ticket.jenis == jenis)
+
+    cid = request.args.get("customer_id")
+    if cid:
+        try:
+            query = query.filter(Ticket.customer_id == int(cid))
+        except ValueError:
+            pass
+
+    did = request.args.get("device_id")
+    if did:
+        try:
+            query = query.filter(Ticket.device_id == int(did))
+        except ValueError:
+            pass
+
+    rank = db.case(PRIORITY_RANK, value=Ticket.prioritas)
+    query = query.order_by(rank.desc(), Ticket.created_at.asc())
+    tickets = query.all()
+
+    targets_map = SlaTarget.get_targets_map()
+    now = utcnow()
+
+    output = io.StringIO()
+    output.write("\ufeff")  # UTF-8 BOM
+    writer = csv.writer(output, delimiter=",")
+    writer.writerow([
+        "ID Tiket", "Judul", "Pelanggan", "Jenis", "Perangkat", "Lokasi",
+        "Prioritas", "Status", "Teknisi", "Status SLA",
+        "Target Respons (m)", "Durasi Respons (m)",
+        "Target Selesai (m)", "Durasi Selesai (m)",
+        "Eskalasi", "Level Eskalasi", "Alasan Eskalasi",
+        "Waktu Dibuat", "Waktu Selesai"
+    ])
+
+    for t in tickets:
+        sla = t.calculate_sla(targets_map, now)
+        tech_nama = t.assigned_tech.nama if t.assigned_tech else "-"
+        writer.writerow([
+            t.id,
+            t.judul,
+            t.pelanggan,
+            t.jenis,
+            t.perangkat or "-",
+            t.lokasi or "-",
+            t.prioritas,
+            t.status,
+            tech_nama,
+            "Melewati SLA" if sla["melewati_sla"] else "Memenuhi SLA",
+            sla["target_respons_menit"],
+            sla["respons_menit"] if sla["respons_menit"] is not None else "-",
+            sla["target_penyelesaian_menit"],
+            sla["penyelesaian_menit"] if sla["penyelesaian_menit"] is not None else "-",
+            "Ya" if t.is_escalated else "Tidak",
+            t.escalation_level or 0,
+            t.escalation_reason or "",
+            t.created_at.isoformat(),
+            t.resolved_at.isoformat() if t.resolved_at else "-"
+        ])
+
+    csv_data = output.getvalue()
+    return Response(
+        csv_data,
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=daftar_tiket_pln_icon_plus.csv"}
+    )
+
+
 @bp.get("/tickets/<int:ticket_id>")
 @roles_required("admin", "teknisi")
 def get_ticket(ticket_id):

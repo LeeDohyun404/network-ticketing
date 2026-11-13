@@ -1024,6 +1024,7 @@
             <option value="ok">Memenuhi SLA</option>
           </select>
           <button class="btn sec" id="refreshBtn">Muat ulang</button>
+          <button class="btn sec" id="exportExcelBtn" title="Ekspor daftar tiket ke Excel">📊 Ekspor Excel</button>
         </div>
         <div class="panel">
           <div class="scroll">
@@ -1440,7 +1441,9 @@
       <td><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span></td><td><span class="tag s-${esc(t.status)}">${ST[t.status]}</span></td><td>${techName(t.ditugaskan_ke)}</td><td><div class="acts">${a}</div></td></tr>`
       }).join("");
     }
-    ["q", "fp", "fsla"].forEach(i => $(i).oninput = renderRows); $("refreshBtn").onclick = () => run(load());
+    ["q", "fp", "fsla"].forEach(i => $(i).oninput = renderRows);
+    $("refreshBtn").onclick = () => run(load());
+    $("exportExcelBtn").onclick = () => exportTicketsToExcel();
     $("rows").onclick = e => {
       const a = e.target.closest("[data-assign]"), s = e.target.closest("[data-st]"), sel = e.target.closest("select");
       if (sel) return;
@@ -1486,7 +1489,7 @@
           : "";
         return `<div class="att-grid" id="attGrid">${thumbs}${uploadBtn}</div>`;
       }
-      $("drawer").innerHTML = `<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><div>${escBtnHtml}<button class="btn sm sec" id="dclose" style="margin-left:6px">Tutup</button></div></div>
+      $("drawer").innerHTML = `<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><div>${escBtnHtml}<button class="btn sm sec" id="exportWordBtn" style="margin-left:6px" title="Ekspor detail tiket ke Word">📄 Ekspor Word</button><button class="btn sm sec" id="dclose" style="margin-left:6px">Tutup</button></div></div>
    <h2 style="margin:8px 0">${esc(t.judul)}</h2><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span> <span class="tag s-${esc(t.status)}">${ST[t.status]}</span>
    ${t.sla.melewati_sla ? `<span class="tag sla-bad" style="margin-left:4px">Melewati SLA</span>` : ""}${escBadge}
    ${escBanner}
@@ -1517,6 +1520,9 @@
           await run(api("POST", `/tickets/${t.id}/escalate`, { alasan: alasan.trim() })
             .then(() => { toast("Tiket berhasil dieskalasi dan notifikasi terkirim", true); openDetail(t.id); load(); }));
         };
+      }
+      if ($("exportWordBtn")) {
+        $("exportWordBtn").onclick = () => run(exportTicketToWord(t));
       }
       // --- Load & bind lampiran ---
       async function reloadAtts() {
@@ -1850,6 +1856,413 @@
       loadNotificationsView();
     })());
     $("refreshNotifBtn").onclick = () => run(loadNotificationsView());
+
+    /* ---- ekspor excel & word ---- */
+    function getLogoDataUrl() {
+      try {
+        const img = document.querySelector(".brand img") || document.querySelector("#loginBox img");
+        if (img && img.naturalWidth) {
+          const c = document.createElement("canvas");
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          const ctx = c.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          return c.toDataURL("image/png");
+        }
+      } catch (e) { console.warn("Logo canvas convert", e); }
+      return "";
+    }
+
+    function exportTicketsToExcel() {
+      const q = $("q").value.toLowerCase(), fp = $("fp").value, fsla = $("fsla") ? $("fsla").value : "";
+      const list = tickets.filter(t => (!statusF || t.status === statusF) && (!fp || t.prioritas === fp) && (!fsla || (fsla === "breach" ? t.sla.melewati_sla : !t.sla.melewati_sla)) && (!q || [t.judul, t.pelanggan, t.perangkat, t.lokasi].join(" ").toLowerCase().includes(q)));
+      if (!list.length) {
+        toast("Tidak ada data tiket untuk diekspor", false);
+        return;
+      }
+
+      const nowStr = new Date().toLocaleString("id-ID");
+      let xml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8">
+  <!--[if gte mso 9]>
+  <xml>
+    <x:ExcelWorkbook>
+      <x:ExcelWorksheets>
+        <x:ExcelWorksheet>
+          <x:Name>Daftar Tiket ICRM+</x:Name>
+          <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+        </x:ExcelWorksheet>
+      </x:ExcelWorksheets>
+    </x:ExcelWorkbook>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 10pt; }
+    table { border-collapse: collapse; width: 100%; }
+    th { background-color: #1a6478; color: #ffffff; font-weight: bold; padding: 7px 10px; border: 1px solid #134e5e; text-align: left; }
+    td { padding: 6px 10px; border: 1px solid #d0e6eb; vertical-align: top; }
+    .title { font-size: 15pt; font-weight: bold; color: #1a6478; }
+    .sub { font-size: 11pt; font-weight: bold; color: #07aab8; }
+    .meta { font-size: 9pt; color: #555555; }
+    .p-kritis { background-color: #fde8e7; color: #c0392b; font-weight: bold; text-align: center; }
+    .p-tinggi { background-color: #fef0e7; color: #d35400; font-weight: bold; text-align: center; }
+    .p-sedang { background-color: #e4f5f8; color: #07aab8; font-weight: bold; text-align: center; }
+    .p-rendah { background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; }
+    .sla-bad { background-color: #fde8e7; color: #c0392b; font-weight: bold; text-align: center; }
+    .sla-ok { background-color: #eafaf1; color: #27ae60; text-align: center; }
+  </style>
+</head>
+<body>
+  <table>
+    <tr><td colspan="17" class="title">PT INDONESIA COMNETS PLUS (PLN ICON PLUS)</td></tr>
+    <tr><td colspan="17" class="sub">ICRM+ DAFTAR TIKET GANGGUAN & PEMELIHARAAN JARINGAN</td></tr>
+    <tr><td colspan="17" class="meta">Waktu Ekspor: ${nowStr} · Total Data: ${list.length} tiket · Diekspor oleh: ${esc(me ? me.nama : 'Admin')} (${esc(me ? me.role : '')})</td></tr>
+    <tr><td colspan="17" style="border:none;height:10px"></td></tr>
+    <thead>
+      <tr>
+        <th style="width:40px;text-align:center">No</th>
+        <th style="width:70px;text-align:center">ID Tiket</th>
+        <th style="width:240px">Judul Gangguan / Masalah</th>
+        <th style="width:200px">Pelanggan / Instansi</th>
+        <th style="width:100px">Jenis</th>
+        <th style="width:150px">Perangkat</th>
+        <th style="width:200px">Titik / Lokasi</th>
+        <th style="width:90px;text-align:center">Prioritas</th>
+        <th style="width:100px;text-align:center">Status</th>
+        <th style="width:160px">Teknisi PIC</th>
+        <th style="width:120px;text-align:center">Kepatuhan SLA</th>
+        <th style="width:100px;text-align:right">Target Resp (m)</th>
+        <th style="width:100px;text-align:right">Realisasi Resp (m)</th>
+        <th style="width:100px;text-align:right">Target Selesai (m)</th>
+        <th style="width:100px;text-align:right">Realisasi Selesai (m)</th>
+        <th style="width:160px">Status Eskalasi</th>
+        <th style="width:150px">Waktu Dibuat</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+      list.forEach((t, idx) => {
+        const slaStatus = t.sla.melewati_sla ? "Melewati SLA" : "Memenuhi SLA";
+        const slaCls = t.sla.melewati_sla ? "sla-bad" : "sla-ok";
+        const escStatus = t.is_escalated ? `Ya (Level ${t.escalation_level}) - ${t.escalation_reason || 'Eskalasi'}` : "Tidak";
+        xml += `
+      <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fcfd'}">
+        <td style="text-align:center">${idx + 1}</td>
+        <td style="text-align:center;font-weight:bold">#${t.id}</td>
+        <td style="font-weight:bold;color:#1a6478">${esc(t.judul)}</td>
+        <td>${esc(t.pelanggan)}</td>
+        <td>${esc(t.jenis)}</td>
+        <td>${esc(t.perangkat || '–')}</td>
+        <td>${esc(t.lokasi || '–')}</td>
+        <td class="p-${t.prioritas}">${esc(t.prioritas.toUpperCase())}</td>
+        <td style="text-align:center;font-weight:600">${ST[t.status] || esc(t.status)}</td>
+        <td>${techName(t.ditugaskan_ke)}</td>
+        <td class="${slaCls}">${slaStatus}</td>
+        <td style="text-align:right">${t.sla.target_respons_menit}</td>
+        <td style="text-align:right">${t.sla.respons_menit != null ? t.sla.respons_menit : '–'}</td>
+        <td style="text-align:right">${t.sla.target_penyelesaian_menit}</td>
+        <td style="text-align:right">${t.sla.penyelesaian_menit != null ? t.sla.penyelesaian_menit : '–'}</td>
+        <td>${esc(escStatus)}</td>
+        <td>${when(t.created_at)}</td>
+      </tr>`;
+      });
+
+      xml += `
+    </tbody>
+  </table>
+</body>
+</html>`;
+
+      const blob = new Blob(["\ufeff", xml], { type: "application/vnd.ms-excel;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Laporan_Tiket_PLN_Icon_Plus_${new Date().toISOString().slice(0, 10)}.xls`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast("Daftar tiket berhasil diekspor ke Excel (.xls)", true);
+    }
+
+    async function exportTicketToWord(t) {
+      toast("Menyiapkan dokumen Word tiket #" + t.id + "...", true);
+      const logoDataUrl = getLogoDataUrl();
+
+      let attList = [];
+      try {
+        const resAtt = await api("GET", `/tickets/${t.id}/attachments`);
+        if (resAtt.lampiran && resAtt.lampiran.length) {
+          attList = await Promise.all(resAtt.lampiran.map(a => api("GET", `/attachments/${a.id}`)));
+        }
+      } catch (e) { }
+
+      let logsList = t.logs || [];
+      try {
+        const resLogs = await api("GET", `/tickets/${t.id}/logs`);
+        if (resLogs.data && resLogs.data.length) logsList = resLogs.data;
+      } catch (e) { }
+
+      const nowStr = new Date().toLocaleString("id-ID", { dateStyle: "full", timeStyle: "short" });
+      const respInfo = t.sla.respons_menit != null ? `${t.sla.respons_menit} menit` : (t.sla.sisa_respons_menit < 0 ? `Lewat ${-t.sla.sisa_respons_menit} menit` : `Sisa ${t.sla.sisa_respons_menit} menit`);
+      const resInfo = t.sla.penyelesaian_menit != null ? `${t.sla.penyelesaian_menit} menit` : (t.sla.sisa_penyelesaian_menit < 0 ? `Lewat ${-t.sla.sisa_penyelesaian_menit} menit` : `Sisa ${t.sla.sisa_penyelesaian_menit} menit`);
+
+      let escBannerHtml = "";
+      if (t.is_escalated) {
+        escBannerHtml = `
+          <div style="background-color:#fde8e7;border:2px solid #e74c3c;border-radius:6px;padding:9pt 12pt;margin:10pt 0;">
+            <div style="color:#c0392b;font-weight:bold;font-size:11.5pt">⚡ TIKET DIESKALASI KE LEVEL ${t.escalation_level}</div>
+            <div style="margin-top:3pt;color:#0e323d;font-size:10pt"><b>Alasan Eskalasi:</b> ${esc(t.escalation_reason || 'Eskalasi penanganan lapangan')}</div>
+            <div style="margin-top:2pt;color:#777;font-size:8.5pt">Waktu Eskalasi: ${when(t.escalated_at)}</div>
+          </div>`;
+      }
+
+      let attHtml = "";
+      if (attList.length > 0) {
+        attHtml = `<table style="width:100%;margin-top:8pt;border:none"><tr>`;
+        attList.forEach((a, i) => {
+          const labelBadge = a.jenis === "before" ? "SEBELUM (BEFORE)" : (a.jenis === "after" ? "SESUDAH (AFTER)" : "DOKUMENTASI UMUM");
+          const labelBg = a.jenis === "before" ? "#d97706" : (a.jenis === "after" ? "#10b981" : "#1a6478");
+          const src = `data:${a.mime_type};base64,${a.data}`;
+          attHtml += `
+            <td style="width:${Math.floor(100 / Math.min(attList.length, 3))}%;vertical-align:top;padding:6pt;text-align:center;border:none">
+              <div style="border:1px solid #d0e6eb;border-radius:5px;padding:6pt;background:#fafcfd">
+                <span style="display:inline-block;background:${labelBg};color:#ffffff;font-size:8pt;font-weight:bold;padding:2pt 6pt;border-radius:3px;margin-bottom:5pt">${labelBadge}</span>
+                <br>
+                <img src="${src}" alt="${esc(a.nama_file)}" style="max-width:240px;max-height:170px;border-radius:4px;border:1px solid #ccc">
+                <div style="font-size:8pt;color:#666;margin-top:4pt;word-break:break-all">${esc(a.nama_file)}</div>
+              </div>
+            </td>`;
+          if ((i + 1) % 3 === 0 && (i + 1) < attList.length) attHtml += `</tr><tr>`;
+        });
+        attHtml += `</tr></table>`;
+      } else {
+        attHtml = `<p style="color:#666;font-style:italic;margin:4pt 0">Tidak ada lampiran foto penanganan pada tiket ini.</p>`;
+      }
+
+      let cmtHtml = "";
+      if (t.komentar && t.komentar.length > 0) {
+        cmtHtml = `
+          <table style="width:100%;border-collapse:collapse;margin-top:6pt">
+            <thead>
+              <tr style="background-color:#1a6478;color:#ffffff">
+                <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:left;width:30%">Pengguna & Waktu</th>
+                <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:left;width:70%">Catatan / Komentar Penanganan</th>
+              </tr>
+            </thead>
+            <tbody>`;
+        t.komentar.forEach(c => {
+          cmtHtml += `
+            <tr>
+              <td style="padding:6pt 8pt;border:1px solid #d0e6eb;vertical-align:top;background:#f8fcfd">
+                <b>${esc(c.nama_penulis || 'Pengguna')}</b> <span style="font-size:8.5pt;color:#666">(${esc(c.role_penulis || '')})</span>
+                <div style="font-size:8pt;color:#888;margin-top:2pt">${when(c.created_at)}</div>
+              </td>
+              <td style="padding:6pt 8pt;border:1px solid #d0e6eb;vertical-align:top;white-space:pre-wrap">${esc(c.pesan)}</td>
+            </tr>`;
+        });
+        cmtHtml += `</tbody></table>`;
+      } else {
+        cmtHtml = `<p style="color:#666;font-style:italic;margin:4pt 0">Belum ada komentar penanganan tercatat.</p>`;
+      }
+
+      let logsHtml = "";
+      if (logsList.length > 0) {
+        logsHtml = `
+          <table style="width:100%;border-collapse:collapse;margin-top:6pt">
+            <thead>
+              <tr style="background-color:#1a6478;color:#ffffff">
+                <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:left;width:22%">Waktu</th>
+                <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:left;width:20%">Pengubah</th>
+                <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:left;width:22%">Aktivitas</th>
+                <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:left;width:36%">Rincian & Catatan</th>
+              </tr>
+            </thead>
+            <tbody>`;
+        logsList.forEach(l => {
+          let desc = "";
+          if (l.aksi === "penugasan") desc = `Ditugaskan ke: <b>${esc(l.nilai_baru || '–')}</b>`;
+          else if (l.aksi === "prioritas") desc = `Prioritas: <b>${esc(l.nilai_lama)} → ${esc(l.nilai_baru)}</b>`;
+          else if (l.aksi === "eskalasi") desc = `Eskalasi: <b>${esc(l.catatan || 'Dieskalasi')}</b>`;
+          else if (l.aksi === "edit") desc = `Edit ${esc(l.field_diubah)}: <b>${esc(l.nilai_baru)}</b>`;
+          else desc = `Status: <b>${ST[l.status_lama] || esc(l.status_lama || '–')} → ${ST[l.status_baru] || esc(l.status_baru)}</b>`;
+          if (l.catatan && l.aksi !== "eskalasi") desc += `<div style="font-size:8.5pt;color:#555;margin-top:2pt"><i>"${esc(l.catatan)}"</i></div>`;
+
+          logsHtml += `
+            <tr>
+              <td style="padding:5pt 8pt;border:1px solid #d0e6eb;font-size:9pt">${when(l.waktu)}</td>
+              <td style="padding:5pt 8pt;border:1px solid #d0e6eb;font-size:9pt">${esc(l.nama_pengubah || 'Sistem')}</td>
+              <td style="padding:5pt 8pt;border:1px solid #d0e6eb;font-size:9pt;font-weight:bold">${esc(l.aksi.toUpperCase())}</td>
+              <td style="padding:5pt 8pt;border:1px solid #d0e6eb;font-size:9pt">${desc}</td>
+            </tr>`;
+        });
+        logsHtml += `</tbody></table>`;
+      } else {
+        logsHtml = `<p style="color:#666;font-style:italic;margin:4pt 0">Belum ada riwayat audit tercatat.</p>`;
+      }
+
+      const wordDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset='utf-8'>
+  <title>Laporan Tiket #${t.id} - ${esc(t.judul)}</title>
+  <style>
+    @page Section1 { size: 21.0cm 29.7cm; margin: 2.0cm 2.0cm 2.0cm 2.0cm; mso-header-margin: 1.0cm; mso-footer-margin: 1.0cm; }
+    div.Section1 { page: Section1; }
+    body { font-family: "Calibri", "Segoe UI", Arial, sans-serif; font-size: 10pt; color: #0e323d; line-height: 1.35; }
+    h1, h2, h3, h4 { color: #1a6478; margin: 0; padding: 0; }
+    table { border-collapse: collapse; width: 100%; }
+    .sec-title { font-size: 11pt; font-weight: bold; color: #1a6478; border-bottom: 2px solid #07aab8; padding-bottom: 3pt; margin-top: 14pt; margin-bottom: 6pt; text-transform: uppercase; }
+    .meta-table td { padding: 5pt 8pt; border: 1px solid #d0e6eb; }
+    .meta-table td.lbl { background-color: #e4f5f8; font-weight: bold; color: #1a6478; width: 22%; }
+    .badge { display: inline-block; padding: 2.5pt 8pt; border-radius: 4px; font-weight: bold; font-size: 8.5pt; color: #ffffff; }
+  </style>
+</head>
+<body>
+  <div class="Section1">
+    <!-- KOP SURAT -->
+    <table style="width:100%;border:none;margin-bottom:6pt">
+      <tr>
+        <td style="width:75px;vertical-align:middle;border:none;padding:0 12pt 0 0">
+          ${logoDataUrl ? `<img src="${logoDataUrl}" width="65" height="65" alt="Logo PLN Icon Plus">` : ""}
+        </td>
+        <td style="vertical-align:middle;border:none;padding:0">
+          <div style="font-size:15pt;font-weight:bold;color:#1a6478;letter-spacing:.02em">PT INDONESIA COMNETS PLUS</div>
+          <div style="font-size:12pt;font-weight:bold;color:#07aab8;margin-top:1pt">PLN ICON PLUS - ICRM+ SYSTEM</div>
+          <div style="font-size:8.5pt;color:#666666;margin-top:2pt">Pusat Pengelolaan Tiket Gangguan, Pemeliharaan & Operasi Jaringan Telekomunikasi</div>
+        </td>
+        <td style="width:130px;vertical-align:middle;text-align:right;border:none;padding:0">
+          <div style="font-size:8.5pt;color:#888">Nomor Tiket:</div>
+          <div style="font-size:18pt;font-weight:bold;color:#1a6478">#${t.id}</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- DUAL-COLOR ACCENT STRIP -->
+    <table style="width:100%;border:none;margin-bottom:12pt">
+      <tr>
+        <td style="height:4px;background-color:#1a6478;border:none;width:75%;padding:0"></td>
+        <td style="height:4px;background-color:#eee428;border:none;width:25%;padding:0"></td>
+      </tr>
+    </table>
+
+    <!-- JUDUL & STATUS -->
+    <table style="width:100%;border:none;margin-bottom:8pt">
+      <tr>
+        <td style="border:none;padding:0">
+          <h2 style="font-size:14pt;color:#1a6478;margin-bottom:5pt">${esc(t.judul)}</h2>
+          <div>
+            <span class="badge" style="background-color:${COL[t.status] || '#1a6478'}">${(ST[t.status] || t.status).toUpperCase()}</span>
+            <span class="badge" style="background-color:${t.prioritas === 'kritis' ? '#e74c3c' : (t.prioritas === 'tinggi' ? '#e67e22' : (t.prioritas === 'sedang' ? '#07aab8' : '#27ae60'))};margin-left:4pt">PRIORITAS ${esc(t.prioritas.toUpperCase())}</span>
+            <span class="badge" style="background-color:${t.sla.melewati_sla ? '#e74c3c' : '#27ae60'};margin-left:4pt">${t.sla.melewati_sla ? 'MELEWATI TARGET SLA' : 'MEMENUHI SLA'}</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    ${escBannerHtml}
+
+    <!-- 1. IDENTITAS GANGGUAN -->
+    <div class="sec-title">1. Informasi Gangguan & Identitas Tiket</div>
+    <table class="meta-table" style="width:100%">
+      <tr>
+        <td class="lbl">Pelanggan / Instansi</td>
+        <td><b>${esc(t.pelanggan)}</b></td>
+        <td class="lbl">Jenis Pekerjaan</td>
+        <td><b>${esc(t.jenis.toUpperCase())}</b></td>
+      </tr>
+      <tr>
+        <td class="lbl">Perangkat Jaringan</td>
+        <td>${esc(t.perangkat || '–')}</td>
+        <td class="lbl">Titik / Alamat Lokasi</td>
+        <td>${esc(t.lokasi || '–')}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Teknisi Bertugas (PIC)</td>
+        <td><b>${techName(t.ditugaskan_ke)}</b></td>
+        <td class="lbl">Waktu Laporan Masuk</td>
+        <td>${when(t.created_at)}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Deskripsi Masalah</td>
+        <td colspan="3" style="white-space:pre-wrap;background:#fafcfd">${esc(t.deskripsi || 'Tidak ada deskripsi tambahan.')}</td>
+      </tr>
+    </table>
+
+    <!-- 2. EVALUASI SLA -->
+    <div class="sec-title">2. Evaluasi Service Level Agreement (SLA)</div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background-color:#1a6478;color:#ffffff">
+          <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:left">Indikator SLA</th>
+          <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:center">Target Maksimal</th>
+          <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:center">Realisasi Durasi</th>
+          <th style="padding:6pt 8pt;border:1px solid #134e5e;text-align:center">Status Kepatuhan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:6pt 8pt;border:1px solid #d0e6eb;font-weight:bold">Waktu Respons (Response Time)</td>
+          <td style="padding:6pt 8pt;border:1px solid #d0e6eb;text-align:center">${t.sla.target_respons_menit} menit</td>
+          <td style="padding:6pt 8pt;border:1px solid #d0e6eb;text-align:center">${respInfo}</td>
+          <td style="padding:6pt 8pt;border:1px solid #d0e6eb;text-align:center;font-weight:bold;color:${t.sla.melewati_sla_respons ? '#c0392b' : '#27ae60'}">${t.sla.melewati_sla_respons ? 'Melewati Target' : 'Memenuhi Target'}</td>
+        </tr>
+        <tr>
+          <td style="padding:6pt 8pt;border:1px solid #d0e6eb;font-weight:bold">Waktu Penyelesaian (Resolution Time)</td>
+          <td style="padding:6pt 8pt;border:1px solid #d0e6eb;text-align:center">${t.sla.target_penyelesaian_menit} menit</td>
+          <td style="padding:6pt 8pt;border:1px solid #d0e6eb;text-align:center">${resInfo}</td>
+          <td style="padding:6pt 8pt;border:1px solid #d0e6eb;text-align:center;font-weight:bold;color:${t.sla.melewati_sla_penyelesaian ? '#c0392b' : '#27ae60'}">${t.sla.melewati_sla_penyelesaian ? 'Melewati Target' : 'Memenuhi Target'}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 3. DOKUMENTASI FOTO -->
+    <div class="sec-title">3. Dokumentasi Foto Lapangan (Before / After / Umum)</div>
+    ${attHtml}
+
+    <!-- 4. KOMENTAR PENANGANAN -->
+    <div class="sec-title">4. Catatan & Komentar Penanganan Lapangan</div>
+    ${cmtHtml}
+
+    <!-- 5. RIWAYAT AUDIT -->
+    <div class="sec-title">5. Riwayat Audit & Log Aktivitas Tiket</div>
+    ${logsHtml}
+
+    <!-- 6. PENGESAHAN -->
+    <div class="sec-title" style="margin-top:20pt">6. Lembar Pengesahan Penanganan</div>
+    <table style="width:100%;border:none;margin-top:14pt">
+      <tr>
+        <td style="width:50%;text-align:center;border:none;vertical-align:top">
+          <div style="font-size:9.5pt;color:#666">Teknisi Pelaksana Lapangan,</div>
+          <div style="height:55px"></div>
+          <div style="font-weight:bold;text-decoration:underline;color:#1a6478">${techName(t.ditugaskan_ke)}</div>
+          <div style="font-size:8.5pt;color:#666">Field Support / Maintenance</div>
+        </td>
+        <td style="width:50%;text-align:center;border:none;vertical-align:top">
+          <div style="font-size:9.5pt;color:#666">Dicetak pada ${nowStr}</div>
+          <div style="font-size:9.5pt;color:#666">Penanggung Jawab / Admin Operasi,</div>
+          <div style="height:45px"></div>
+          <div style="font-weight:bold;text-decoration:underline;color:#1a6478">${esc(me ? me.nama : 'Admin Operasi')}</div>
+          <div style="font-size:8.5pt;color:#666">Network Operation Center (NOC)</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob(["\ufeff", wordDoc], { type: "application/msword;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const cleanTitle = (t.judul || "tiket").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30);
+      a.href = url;
+      a.download = `Tiket_${t.id}_${cleanTitle}_PLN_Icon_Plus.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast("Dokumen Word tiket #" + t.id + " berhasil diekspor (.doc)", true);
+    }
 
     checkActivation();
     try {

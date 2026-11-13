@@ -98,6 +98,7 @@ Server berjalan di `http://127.0.0.1:5000`. Jalankan tes dengan `pytest`.
 | GET | /notifications | login | Daftar notifikasi pengguna login (`?unread_only=`) |
 | PUT | /notifications/<id>/read | pemilik notifikasi | Tandai notifikasi spesifik sebagai telah dibaca |
 | PUT | /notifications/read-all | login | Tandai seluruh notifikasi pengguna sebagai telah dibaca |
+| GET | /tickets/export/excel | login | Ekspor data tiket ke file spreadsheet / CSV (`?status=`, `?prioritas=`, dll.) |
 
 Header untuk endpoint terlindungi: `Authorization: Bearer <token>`.
 
