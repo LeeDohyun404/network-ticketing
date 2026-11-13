@@ -2213,7 +2213,7 @@
         logsHtml = `<p style="color:#666;font-style:italic;margin:4pt 0">Belum ada riwayat audit tercatat.</p>`;
       }
 
-      const wordDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns:v='urn:schemas-microsoft-com:vml' xmlns='http://www.w3.org/TR/REC-html40'>
+      const wordDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
   <meta charset='utf-8'>
   <title>Laporan Tiket #${t.id} - ${esc(t.judul)}</title>
@@ -2232,22 +2232,15 @@
 <body>
   <div class="Section1">
     <!-- KOP SURAT -->
-    <table style="width:100%;border:none;margin-bottom:6pt">
-      <tr>
-        <td style="width:80px;vertical-align:top;border:none;padding:0 12pt 0 0">
-          ${logoDataUrl ? `
-          <!--[if gte vml 1]><v:image id="logoNITM"
-            style="width:65pt;height:65pt;mso-wrap-style:square;vertical-align:top;"
-            src="${logoDataUrl}" o:title="Logo NITM"/>
-          <![endif]-->
-          <!--[if !vml]--><img src="${logoDataUrl}" width="65" height="65" border="0"
-            style="vertical-align:top;" alt="Logo NITM"><!--[endif]-->
-          ` : ""}
+    <table style="width:100%;border:none;margin-bottom:6pt;mso-table-lspace:0pt;mso-table-rspace:0pt;mso-table-bspace:0pt;mso-table-tspace:0pt;">
+      <tr style="vertical-align:top;">
+        <td width="72" valign="top" style="width:72px;vertical-align:top;border:none;padding:0 10pt 0 0;mso-padding-top-alt:0pt;mso-padding-bottom-alt:0pt;">
+          ${logoDataUrl ? `<img src="${logoDataUrl}" width="62" height="62" border="0" style="width:62px;height:62px;display:block;margin:0;padding:0;" alt="Logo NITM">` : ""}
         </td>
-        <td style="vertical-align:top;border:none;padding:0">
-          <div style="font-size:15pt;font-weight:bold;color:#1a6478;letter-spacing:.02em">PT NETWORK INCIDENT TICKETING MANAGEMENT INDONESIA</div>
-          <div style="font-size:12pt;font-weight:bold;color:#07aab8;margin-top:1pt">NITMI - NETWORK TICKETING SYSTEM</div>
-          <div style="font-size:8.5pt;color:#666666;margin-top:2pt">Pusat Pengelolaan Tiket Gangguan, Pemeliharaan & Operasi Jaringan Telekomunikasi</div>
+        <td valign="top" style="vertical-align:top;border:none;padding:0;mso-padding-top-alt:0pt;mso-padding-bottom-alt:0pt;">
+          <div style="font-size:14pt;font-weight:bold;color:#1a6478;letter-spacing:.01em;line-height:1.15;margin:0;padding:0;mso-line-height-rule:exactly;">PT NETWORK INCIDENT TICKETING MANAGEMENT INDONESIA</div>
+          <div style="font-size:11pt;font-weight:bold;color:#07aab8;margin-top:2pt;line-height:1.15;padding:0;">NITMI - NETWORK TICKETING SYSTEM</div>
+          <div style="font-size:8.5pt;color:#666666;margin-top:2pt;line-height:1.2;padding:0;">Pusat Pengelolaan Tiket Gangguan, Pemeliharaan & Operasi Jaringan Telekomunikasi</div>
         </td>
         <td style="width:130px;vertical-align:middle;text-align:right;border:none;padding:0">
           <div style="font-size:8.5pt;color:#888">Nomor Tiket:</div>
