@@ -7,17 +7,17 @@
   <title>PLN Icon Plus</title>
   <style>
     :root {
-      --bg: #eef2f8;
+      --bg: #e4f5f8;
       --pn: #fff;
-      --ink: #0d1b2a;
-      --mu: #4a6080;
-      --ln: #d0d9e8;
-      --ac: #1565c0;
-      --acd: #0d47a1;
+      --ink: #0d2a30;
+      --mu: #4a7c88;
+      --ln: #c0e4ea;
+      --ac: #07aab8;
+      --acd: #1a6478;
       --red: #b3261e;
       --amb: #b86a08;
       --grn: #2b7a4b;
-      --blu: #1565c0;
+      --blu: #07aab8;
       --r: 6px
     }
 
@@ -42,7 +42,7 @@
     }
 
     :focus-visible {
-      outline: 2px solid var(--ac);
+      outline: 2px solid #07aab8;
       outline-offset: 2px
     }
 
@@ -63,7 +63,7 @@
     textarea {
       width: 100%;
       padding: 9px 11px;
-      border: 1px solid #bcc6cb;
+      border: 1px solid #a8d8df;
       border-radius: var(--r);
       background: #fff
     }
@@ -102,11 +102,11 @@
     .btn.sec {
       background: #fff;
       color: var(--ink);
-      border-color: #bcc6cb
+      border-color: #a8d8df
     }
 
     .btn.sec:hover {
-      background: #f0f4fb
+      background: #e4f5f8
     }
 
     .btn.sm {
@@ -156,8 +156,8 @@
     }
 
     #shell>aside {
-      background: #0d2b6e;
-      color: #d6e4f7;
+      background: #1a6478;
+      color: #c8ecf0;
       padding: 20px 14px;
       display: flex;
       flex-direction: column;
@@ -170,7 +170,7 @@
     #shell>aside .brand {
       font-weight: 700;
       font-size: 1.05rem;
-      color: #fdd835;
+      color: #eee428;
       padding: 0 8px 18px;
       line-height: 1.25
     }
@@ -179,7 +179,7 @@
       display: block;
       font-weight: 400;
       font-size: .8rem;
-      color: #7ea8d8
+      color: #7ec8d0
     }
 
     .nav {
@@ -193,32 +193,32 @@
     }
 
     .nav:hover {
-      background: #1a3f8f
+      background: #0e4f61
     }
 
     .nav.on {
-      background: #fdd835;
-      color: #0d2b6e;
+      background: #eee428;
+      color: #1a6478;
       font-weight: 700
     }
 
     .me {
       margin-top: auto;
       padding: 10px 8px;
-      border-top: 1px solid #1e4080;
+      border-top: 1px solid #0e4f61;
       font-size: .85rem
     }
 
     .me b {
       display: block;
-      color: #fdd835
+      color: #eee428
     }
 
     .me button {
       margin-top: 8px;
       background: none;
-      border: 1px solid #2d5494;
-      color: #d6e4f7;
+      border: 1px solid #2a7d8f;
+      color: #c8ecf0;
       border-radius: var(--r);
       padding: 4px 10px;
       cursor: pointer
@@ -332,7 +332,7 @@
       font-size: .82rem;
       color: var(--mu);
       font-weight: 600;
-      background: #f0f4fb;
+      background: #d4eff4;
       white-space: nowrap
     }
 
@@ -345,7 +345,7 @@
     }
 
     tbody tr.t:hover {
-      background: #eef4ff
+      background: #d4eff4
     }
 
     .tt {
@@ -820,7 +820,7 @@
 <body>
   <div id="auth">
     <div class="box" id="loginBox">
-      <h1>Network Incident Ticketing</h1>
+      <h1>ICRM+ PLN Icon Plus</h1>
       <p class="mu">Masuk untuk mengelola tiket gangguan.</p>
       <div class="f"><label for="email">Email</label><input id="email" type="email" autocomplete="username"></div>
       <div class="f"><label for="password">Password</label><input id="password" type="password"
@@ -996,7 +996,8 @@
               <tbody id="maintRows"></tbody>
             </table>
           </div>
-          <div class="empty hide" id="maintEmpty">Belum ada jadwal maintenance. Klik "+ Buat Jadwal" untuk merencanakan pemeliharaan.</div>
+          <div class="empty hide" id="maintEmpty">Belum ada jadwal maintenance. Klik "+ Buat Jadwal" untuk merencanakan
+            pemeliharaan.</div>
         </div>
       </section>
     </main>
@@ -1112,14 +1113,21 @@
   <dialog id="dMaint">
     <h3 id="maintModalTitle">Buat Jadwal Maintenance</h3>
     <input type="hidden" id="m_id">
-    <div class="f"><label for="m_judul">Judul Pemeliharaan *</label><input id="m_judul" placeholder="Contoh: Inspeksi ODP & Backup Konfigurasi OLT" required></div>
+    <div class="f"><label for="m_judul">Judul Pemeliharaan *</label><input id="m_judul"
+        placeholder="Contoh: Inspeksi ODP & Backup Konfigurasi OLT" required></div>
     <div class="g2">
-      <div class="f"><label for="m_cust">Pelanggan (opsional)</label><select id="m_cust"><option value="">– Tanpa pelanggan (Infrastruktur Umum) –</option></select></div>
-      <div class="f"><label for="m_dev">Perangkat (opsional)</label><select id="m_dev"><option value="">– Pilih dari master perangkat –</option></select></div>
+      <div class="f"><label for="m_cust">Pelanggan (opsional)</label><select id="m_cust">
+          <option value="">– Tanpa pelanggan (Infrastruktur Umum) –</option>
+        </select></div>
+      <div class="f"><label for="m_dev">Perangkat (opsional)</label><select id="m_dev">
+          <option value="">– Pilih dari master perangkat –</option>
+        </select></div>
     </div>
     <div class="g2">
-      <div class="f"><label for="m_lokasi">Titik / Lokasi Spesifik</label><input id="m_lokasi" placeholder="Misal: Jl. Raya Songgom / R. Server"></div>
-      <div class="f"><label for="m_tgl">Tanggal & Waktu Rencana *</label><input id="m_tgl" type="datetime-local" required></div>
+      <div class="f"><label for="m_lokasi">Titik / Lokasi Spesifik</label><input id="m_lokasi"
+          placeholder="Misal: Jl. Raya Songgom / R. Server"></div>
+      <div class="f"><label for="m_tgl">Tanggal & Waktu Rencana *</label><input id="m_tgl" type="datetime-local"
+          required></div>
     </div>
     <div class="g2">
       <div class="f"><label for="m_prioritas">Prioritas</label>
@@ -1139,8 +1147,10 @@
         </select>
       </div>
     </div>
-    <div class="f"><label for="m_deskripsi">Rincian Tugas (opsional)</label><textarea id="m_deskripsi" rows="3" placeholder="Jelaskan SOP atau ceklist pemeliharaan..."></textarea></div>
-    <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="saveMaintBtn">Simpan Jadwal</button></div>
+    <div class="f"><label for="m_deskripsi">Rincian Tugas (opsional)</label><textarea id="m_deskripsi" rows="3"
+        placeholder="Jelaskan SOP atau ceklist pemeliharaan..."></textarea></div>
+    <div class="dact"><button class="btn sec" data-close>Batal</button><button class="btn" id="saveMaintBtn">Simpan
+        Jadwal</button></div>
   </dialog>
 
   <dialog id="dSt">
