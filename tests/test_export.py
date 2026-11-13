@@ -48,3 +48,5 @@ def test_ui_halaman_memiliki_tombol_ekspor(client):
     assert "exportWordBtn" in text
     assert "exportTicketsToExcel" in text
     assert "exportTicketToWord" in text
+    assert "normalizeImageShape" in text
+

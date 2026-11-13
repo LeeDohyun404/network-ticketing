@@ -1873,6 +1873,37 @@
       return "";
     }
 
+    function normalizeImageShape(dataUrl, targetWidth = 480, targetHeight = 320) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+
+            // Center-crop / fit to uniform target dimensions (cover)
+            const scale = Math.max(targetWidth / img.width, targetHeight / img.height);
+            const x = (targetWidth - img.width * scale) / 2;
+            const y = (targetHeight - img.height * scale) / 2;
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, targetWidth, targetHeight);
+            ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+            resolve(canvas.toDataURL("image/jpeg", 0.92));
+          } catch (e) {
+            resolve(dataUrl);
+          }
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      });
+    }
+
     function exportTicketsToExcel() {
       const q = $("q").value.toLowerCase(), fp = $("fp").value, fsla = $("fsla") ? $("fsla").value : "";
       const list = tickets.filter(t => (!statusF || t.status === statusF) && (!fp || t.prioritas === fp) && (!fsla || (fsla === "breach" ? t.sla.melewati_sla : !t.sla.melewati_sla)) && (!q || [t.judul, t.pelanggan, t.perangkat, t.lokasi].join(" ").toLowerCase().includes(q)));
@@ -2020,21 +2051,55 @@
 
       let attHtml = "";
       if (attList.length > 0) {
-        attHtml = `<table style="width:100%;margin-top:8pt;border:none"><tr>`;
-        attList.forEach((a, i) => {
-          const labelBadge = a.jenis === "before" ? "SEBELUM (BEFORE)" : (a.jenis === "after" ? "SESUDAH (AFTER)" : "DOKUMENTASI UMUM");
-          const labelBg = a.jenis === "before" ? "#d97706" : (a.jenis === "after" ? "#10b981" : "#1a6478");
-          const src = `data:${a.mime_type};base64,${a.data}`;
+        // Normalisasi ukuran semua gambar ke rasio seragam (480x320 px)
+        const uniformImages = await Promise.all(attList.map(async (a) => {
+          const rawSrc = `data:${a.mime_type};base64,${a.data}`;
+          const uniformSrc = await normalizeImageShape(rawSrc, 480, 320);
+          return { ...a, uniformSrc };
+        }));
+
+        attHtml = `<table style="width:100%;table-layout:fixed;border-collapse:separate;border-spacing:8pt 10pt;border:none"><tr>`;
+        uniformImages.forEach((a, i) => {
+          const isBefore = a.jenis === "before";
+          const isAfter = a.jenis === "after";
+          const labelTitle = isBefore
+            ? "📷 SEBELUM PENANGANAN (BEFORE)"
+            : (isAfter ? "📷 SESUDAH PENANGANAN (AFTER)" : "📷 DOKUMENTASI UMUM LAPANGAN");
+          const headerBg = isBefore ? "#d97706" : (isAfter ? "#10b981" : "#1a6478");
+          const frameBorder = isBefore ? "#f59e0b" : (isAfter ? "#059669" : "#07aab8");
+
           attHtml += `
-            <td style="width:${Math.floor(100 / Math.min(attList.length, 3))}%;vertical-align:top;padding:6pt;text-align:center;border:none">
-              <div style="border:1px solid #d0e6eb;border-radius:5px;padding:6pt;background:#fafcfd">
-                <span style="display:inline-block;background:${labelBg};color:#ffffff;font-size:8pt;font-weight:bold;padding:2pt 6pt;border-radius:3px;margin-bottom:5pt">${labelBadge}</span>
-                <br>
-                <img src="${src}" alt="${esc(a.nama_file)}" style="max-width:240px;max-height:170px;border-radius:4px;border:1px solid #ccc">
-                <div style="font-size:8pt;color:#666;margin-top:4pt;word-break:break-all">${esc(a.nama_file)}</div>
+            <td style="width:50%;vertical-align:top;border:none;padding:0">
+              <div style="border:2px solid ${frameBorder};border-radius:6px;background-color:#ffffff;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+                <!-- Header Badge Strip Shape -->
+                <div style="background-color:${headerBg};color:#ffffff;font-size:8.5pt;font-weight:bold;padding:5pt 8pt;text-align:center;letter-spacing:0.03em">
+                  ${labelTitle}
+                </div>
+                <!-- Image Box Frame Shape (Seragam 240x160 px) -->
+                <div style="padding:8pt;background-color:#f8fcfd;text-align:center">
+                  <table style="width:100%;border:none;margin:0 auto">
+                    <tr>
+                      <td style="text-align:center;vertical-align:middle;border:none;padding:0">
+                        <img src="${a.uniformSrc}" width="240" height="160" style="width:240px;height:160px;display:block;margin:0 auto;border:1px solid #d0e6eb;border-radius:4px" alt="${esc(a.nama_file)}">
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <!-- Card Footer Info -->
+                <div style="background-color:#f5fbfc;border-top:1px solid #d0e6eb;padding:5pt 8pt;text-align:center;font-size:8.5pt">
+                  <div style="font-weight:bold;color:#0e323d;word-break:break-all">${esc(a.nama_file)}</div>
+                  <div style="color:#777777;font-size:7.5pt;margin-top:2pt">Kategori: <b>${esc(a.jenis.toUpperCase())}</b>${a.created_at ? ' · Waktu: ' + when(a.created_at) : ''}</div>
+                </div>
               </div>
             </td>`;
-          if ((i + 1) % 3 === 0 && (i + 1) < attList.length) attHtml += `</tr><tr>`;
+
+          // 2 foto per baris untuk perbandingan Before & After yang seragam dan rapi
+          if ((i + 1) % 2 === 0 && (i + 1) < uniformImages.length) {
+            attHtml += `</tr><tr>`;
+          } else if ((i + 1) === uniformImages.length && (i + 1) % 2 !== 0) {
+            // Kolom kosong penyeimbang jika jumlah ganjil
+            attHtml += `<td style="width:50%;border:none;padding:0"></td>`;
+          }
         });
         attHtml += `</tr></table>`;
       } else {
