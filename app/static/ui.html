@@ -873,198 +873,94 @@
         font-size: .84rem;
       }
 
-      /* Search & Filter Bar Mobile */
-      .bar {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 14px;
-      }
-
-      .bar input {
-        width: 100%;
-        height: 42px;
-        min-height: 42px;
-        padding: 9px 12px;
-        font-size: 14.5px;
-        box-sizing: border-box;
-        border: 1.5px solid #a8d8df;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,.04);
-      }
-
-      .bar input:focus {
-        border-color: var(--ac);
-        box-shadow: 0 0 0 3px rgba(7, 170, 184, .18);
-        outline: none;
-      }
-
-      .bar select {
-        width: 100%;
-        height: 40px;
-        min-height: 40px;
-        padding: 8px 10px;
-        font-size: 14px;
-        box-sizing: border-box;
-        border-radius: 8px;
-      }
-
-      .bar .btn {
-        width: 100%;
-        height: 40px;
-        min-height: 40px;
-        font-size: 14px;
-        border-radius: 8px;
-      }
-
-      /* Pipeline Grid */
-      .pipe {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-        margin-bottom: 12px;
-      }
-
-      .seg {
-        flex: unset !important;
-        width: auto !important;
-        padding: 10px 12px;
-      }
-
-      .seg span {
-        font-size: .78rem;
-      }
-
-      .seg b {
-        font-size: 1.35rem;
-      }
-
-      /* SLA summary */
-      .sla {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px 12px;
-        padding: 10px 12px;
-        font-size: .8rem;
-        margin-bottom: 12px;
-      }
-
-      /* Panel & Tabel Kartu Responsif */
-      .panel {
-        border-radius: 8px;
-        overflow: hidden;
-      }
-
-      .panel table,
-      .panel tbody {
-        display: block;
-        width: 100%;
-      }
-
-      .panel thead {
-        display: none;
-      }
-
-      .panel tr {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--ln);
-        background: #fff;
-      }
-
-      .panel tr:nth-child(even) {
-        background: #fbfdfe;
-      }
-
-      .panel tr:last-child {
-        border-bottom: none;
-      }
-
-      .panel td {
-        display: block;
-        padding: 0;
-        border: none;
-        width: 100%;
-      }
-
-      /* Baris Tiket */
-      #rows td:nth-child(1) {
-        order: 1;
-        font-size: .8rem;
-        color: var(--mu);
-        font-weight: 600;
-      }
-
-      #rows td:nth-child(1):before {
-        content: "Tiket #";
-      }
-
-      #rows td:nth-child(2) {
-        order: 2;
-        font-size: .98rem;
-      }
-
-      #rows td:nth-child(3) {
-        order: 3;
-        display: inline-flex;
-        width: auto;
-      }
-
-      #rows td:nth-child(4) {
-        order: 4;
-        display: inline-flex;
-        width: auto;
-      }
-
-      #rows td:nth-child(5) {
-        order: 5;
-        font-size: .85rem;
-        color: var(--mu);
-      }
-
-      #rows td:nth-child(5):before {
-        content: "Teknisi: ";
-        font-weight: 600;
-        color: var(--ink);
-      }
-
-      #rows td:nth-child(6) {
-        order: 6;
-        width: 100%;
-        margin-top: 4px;
-        padding-top: 8px;
-        border-top: 1px dashed var(--ln);
-      }
-
-      /* Baris Data Lainnya */
-      #techRows tr, #invRows tr, #custRows tr, #devRows tr, #maintRows tr, #notifRows tr {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        padding: 12px;
-      }
-
-      .acts {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .acts select, .acts .btn {
-        width: 100% !important;
-        min-height: 38px;
-      }
-
-      /* Drawer Rincian Tiket Mobile */
+            /* Drawer Rincian Tiket Mobile */
       #drawer {
         width: 100% !important;
         max-width: 100vw;
         height: 100%;
-        padding: 16px;
+        padding: 16px 14px 40px;
         box-sizing: border-box;
+      }
+
+      #drawer .acts:first-child {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--ln);
+        margin-bottom: 12px;
+      }
+
+      #drawer .acts:first-child > div {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      #drawer .acts:first-child .btn {
+        width: auto !important;
+        min-height: 32px !important;
+        padding: 5px 10px !important;
+        font-size: .8rem !important;
+      }
+
+      #drawer h2 {
+        font-size: 1.22rem;
+        margin: 6px 0 8px !important;
+      }
+
+      #drawer .meta {
+        grid-template-columns: 90px 1fr;
+        gap: 4px 10px;
+        font-size: .86rem;
+      }
+
+      /* Baris Filter Pencarian Tiket di Mobile */
+      .bar {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+
+      .bar input#q {
+        width: 100% !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 38px !important;
+        padding: 6px 12px !important;
+        font-size: 13.5px !important;
+        box-sizing: border-box !important;
+        border: 1px solid #a8d8df !important;
+        border-radius: 6px !important;
+        background: #fff;
+        line-height: normal !important;
+      }
+
+      .bar input#q:focus {
+        border-color: var(--ac) !important;
+        outline: none;
+      }
+
+      .bar select {
+        width: 100% !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 6px 10px !important;
+        font-size: 13.5px !important;
+        box-sizing: border-box !important;
+        border-radius: 6px !important;
+      }
+
+      .bar .btn {
+        width: 100% !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        font-size: 13.5px !important;
+        border-radius: 6px !important;
       }
 
       dialog {
@@ -1793,10 +1689,10 @@
       const resInfo = t.sla.penyelesaian_menit != null ? fmt(t.sla.penyelesaian_menit) : (t.sla.sisa_penyelesaian_menit < 0 ? `Lewat ${-t.sla.sisa_penyelesaian_menit}m` : `Sisa ${t.sla.sisa_penyelesaian_menit}m`);
       function fmtLog(l) {
         let h = "";
-        if (l.aksi === "penugasan") h = `👤 Ditugaskan: <b>${esc(l.nilai_lama || "\u2013")} \u2192 ${esc(l.nilai_baru)}</b>`;
+        if (l.aksi === "penugasan") h = `👤 Ditugaskan: <b>${esc(l.nilai_lama || "–")} \u2192 ${esc(l.nilai_baru)}</b>`;
         else if (l.aksi === "prioritas") h = `\u26a1 Prioritas: <b>${esc(l.nilai_lama)} \u2192 ${esc(l.nilai_baru)}</b>`;
         else if (l.aksi === "eskalasi") h = `\u26a1 Eskalasi: <b>${esc(l.catatan || 'Dieskalasi')}</b>`;
-        else if (l.aksi === "edit") h = `\u270f\ufe0f Edit ${esc(l.field_diubah)}: <span class="mu">${esc(l.nilai_lama || "\u2013")}</span> \u2192 <b>${esc(l.nilai_baru)}</b>`;
+        else if (l.aksi === "edit") h = `\u270f\ufe0f Edit ${esc(l.field_diubah)}: <span class="mu">${esc(l.nilai_lama || "–")}</span> \u2192 <b>${esc(l.nilai_baru)}</b>`;
         else h = `\U0001f504 Status: <b>${ST[l.status_lama] || esc(l.status_lama)} \u2192 ${ST[l.status_baru] || esc(l.status_baru)}</b>`;
         const by = l.nama_pengubah ? ` \u00b7 oleh ${esc(l.nama_pengubah)}` : "";
         return `<li>${h}<div class="mu">${when(l.waktu)}${by}</div>${l.catatan && l.aksi !== 'eskalasi' ? `<div>${esc(l.catatan)}</div>` : ""}</li>`;
@@ -1810,14 +1706,14 @@
       const escBadge = t.is_escalated ? ` <span class="tag" style="background:var(--red);color:#fff">⚡ Dieskalasi (Lv ${t.escalation_level})</span>` : "";
       const escBanner = t.is_escalated ? `<div style="background:#fde8e7;border:1px solid #f5c2c0;color:var(--red);padding:10px 12px;border-radius:6px;margin:10px 0;font-size:.85rem">⚡ <b>DIESKALASI KE LEVEL ${t.escalation_level}</b><div style="margin-top:2px;color:var(--ink)">${esc(t.escalation_reason || 'Eskalasi penanganan tiket')}</div><div class="mu" style="font-size:.78rem;margin-top:2px">${when(t.escalated_at)}</div></div>` : "";
       function attThumbHtml(a) {
-        const delBtn = canUpload ? `<button class="att-del" data-aid="${a.id}" title="Hapus lampiran" aria-label="Hapus">\u2715</button>` : "";
+        const delBtn = canUpload ? `<button class="att-del" data-aid="${a.id}" title="Hapus lampiran" aria-label="Hapus">✕</button>` : "";
         const src = a.data ? `data:${esc(a.mime_type)};base64,${a.data}` : "";
         return `<div class="att-thumb"><img src="${src}" alt="${esc(a.nama_file)}" loading="lazy" data-aid="${a.id}"><span class="att-label ${esc(a.jenis)}">${esc(a.jenis)}</span>${delBtn}</div>`;
       }
       function buildGrid(list) {
         const thumbs = list.map(a => attThumbHtml(a)).join("");
         const uploadBtn = canUpload && list.length < 5
-          ? `<label class="att-upload" title="Tambah foto">\U0001f4f7<span>Tambah foto</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hide" id="attFile"></label>`
+          ? `<label class="att-upload" title="Tambah foto">📷<span>Tambah foto</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hide" id="attFile"></label>`
           : "";
         return `<div class="att-grid" id="attGrid">${thumbs}${uploadBtn}</div>`;
       }
@@ -1826,21 +1722,21 @@
    ${t.sla.melewati_sla ? `<span class="tag sla-bad" style="margin-left:4px">Melewati SLA</span>` : ""}${escBadge}
    ${escBanner}
    <p class="mu">${esc(t.deskripsi || "Tanpa deskripsi")}</p>
-   <dl class="meta"><dt>Pelanggan</dt><dd>${esc(t.pelanggan)}</dd><dt>Jenis</dt><dd>${esc(t.jenis)}</dd><dt>Perangkat</dt><dd>${esc(t.perangkat || "\u2013")}</dd><dt>Lokasi</dt><dd>${esc(t.lokasi || "\u2013")}</dd><dt>Teknisi</dt><dd>${techName(t.ditugaskan_ke)}</dd><dt>Dibuat</dt><dd>${when(t.created_at)}</dd></dl>
+   <dl class="meta"><dt>Pelanggan</dt><dd>${esc(t.pelanggan)}</dd><dt>Jenis</dt><dd>${esc(t.jenis)}</dd><dt>Perangkat</dt><dd>${esc(t.perangkat || "–")}</dd><dt>Lokasi</dt><dd>${esc(t.lokasi || "–")}</dd><dt>Teknisi</dt><dd>${techName(t.ditugaskan_ke)}</dd><dt>Dibuat</dt><dd>${when(t.created_at)}</dd></dl>
    <div class="kpi">
      <div><span class="mu">Target Respons</span><b class="num">${t.sla.target_respons_menit}m</b></div>
      <div><span class="mu">Target Selesai</span><b class="num">${t.sla.target_penyelesaian_menit}m</b></div>
      <div><span class="mu">Waktu Respons</span><b class="num">${respInfo}</b>${t.sla.melewati_sla_respons ? ` <span class="tag sla-bad" style="font-size:.7rem">Lewat</span>` : ""}</div>
      <div><span class="mu">Waktu Penyelesaian</span><b class="num">${resInfo}</b>${t.sla.melewati_sla_penyelesaian ? ` <span class="tag sla-bad" style="font-size:.7rem">Lewat</span>` : ""}</div>
    </div>
-   <h3 style="margin:18px 0 4px">\U0001f4f7 Lampiran Foto</h3>
+   <h3 style="margin:18px 0 4px">📷 Lampiran Foto</h3>
    ${buildGrid([])}
    <h3 style="margin:18px 0 4px">Komentar Penanganan</h3>
    <div id="cmtList" style="margin-bottom:12px">
      ${(t.komentar && t.komentar.length) ? `<ul class="tl">${t.komentar.map(c => `<li><b>${esc(c.nama_penulis || 'Pengguna')} <span class="mu" style="font-size:.75rem">(${esc(c.role_penulis || '')})</span></b><div class="mu">${when(c.created_at)}</div><div style="margin-top:2px;white-space:pre-wrap">${esc(c.pesan)}</div></li>`).join("")}</ul>` : `<p class="mu">Belum ada komentar.</p>`}
    </div>
    <div class="f" style="margin-top:10px">
-     <textarea id="cmtText" rows="2" placeholder="Tulis komentar penanganan\u2026" maxlength="2000"></textarea>
+     <textarea id="cmtText" rows="2" placeholder="Tulis komentar penanganan…" maxlength="2000"></textarea>
      <button class="btn sm" id="cmtBtn" style="margin-top:6px">Kirim Komentar</button>
    </div>
    <h3 style="margin:18px 0 4px">Riwayat Audit</h3>`+ (t.logs.length ? `<ul class="tl">${t.logs.map(fmtLog).join("")}</ul>` : `<p class="mu">Belum ada perubahan tercatat.</p>`);
@@ -1863,10 +1759,10 @@
           const list = (await api("GET", `/tickets/${t.id}/attachments`)).lampiran;
           const withData = await Promise.all(list.map(a => api("GET", `/attachments/${a.id}`)));
           const uploadBtn = canUpload && withData.length < 5
-            ? `<label class="att-upload" title="Tambah foto">\U0001f4f7<span>Tambah foto</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hide" id="attFile"></label>`
+            ? `<label class="att-upload" title="Tambah foto">📷<span>Tambah foto</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hide" id="attFile"></label>`
             : "";
           grid.innerHTML = withData.map(a => attThumbHtml(a)).join("") + uploadBtn;
-          grid.previousElementSibling.textContent = `\U0001f4f7 Lampiran Foto (${withData.length}/5)`;
+          grid.previousElementSibling.textContent = `📷 Lampiran Foto (${withData.length}/5)`;
         } catch (e) { }
         bindAttEvents();
       }
