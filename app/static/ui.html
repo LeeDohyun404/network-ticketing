@@ -881,12 +881,40 @@
         margin-bottom: 14px;
       }
 
-      .bar input,
-      .bar select,
+      .bar input {
+        width: 100%;
+        height: 42px;
+        min-height: 42px;
+        padding: 9px 12px;
+        font-size: 14.5px;
+        box-sizing: border-box;
+        border: 1.5px solid #a8d8df;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.04);
+      }
+
+      .bar input:focus {
+        border-color: var(--ac);
+        box-shadow: 0 0 0 3px rgba(7, 170, 184, .18);
+        outline: none;
+      }
+
+      .bar select {
+        width: 100%;
+        height: 40px;
+        min-height: 40px;
+        padding: 8px 10px;
+        font-size: 14px;
+        box-sizing: border-box;
+        border-radius: 8px;
+      }
+
       .bar .btn {
         width: 100%;
+        height: 40px;
         min-height: 40px;
-        font-size: 15px;
+        font-size: 14px;
+        border-radius: 8px;
       }
 
       /* Pipeline Grid */
