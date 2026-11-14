@@ -5,6 +5,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Network Incident Ticketing Management Indonesia</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/favicon-192.png">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+  <meta name="theme-color" content="#1a6478">
   <style>
     :root {
       --bg: #e4f5f8;
@@ -189,32 +194,14 @@
       margin-top: 6px
     }
 
-    .brand     .drawer-close-btn {
+    .drawer-close-btn {
       display: none;
     }
-    .mobile-header {
-      display: none;
-    }
+
     .mobile-me {
       display: none;
     }
-    .desktop-me {
-      margin-top: auto;
-      padding: 10px 8px;
-      border-top: 1px solid #0e4f61;
-      font-size: .85rem;
-    }
-    .desktop-me { display: none !important; }
-      .drawer-close-btn {
-      display: none;
-    }
-    .mobile-header {
-      display: none;
-    }
-    .mobile-me { display: flex !important; align-items: center; gap: 8px; margin: 0; padding: 0; border: none; }
-      .me {
-      display: none;
-    }
+
 
     .nav-tabs-bar {
       display: flex;
@@ -242,35 +229,13 @@
       font-weight: 700
     }
 
-        .drawer-close-btn {
-      display: none;
-    }
-    .mobile-header {
-      display: none;
-    }
-    .mobile-me {
-      display: none;
-    }
-    .desktop-me {
-      margin-top: auto;
-      padding: 10px 8px;
-      border-top: 1px solid #0e4f61;
-      font-size: .85rem;
-    }
-    .desktop-me { display: none !important; }
-      .drawer-close-btn {
-      display: none;
-    }
-    .mobile-header {
-      display: none;
-    }
-    .mobile-me { display: flex !important; align-items: center; gap: 8px; margin: 0; padding: 0; border: none; }
-      .me {
+    .me {
       margin-top: auto;
       padding: 10px 8px;
       border-top: 1px solid #0e4f61;
       font-size: .85rem
     }
+
 
     .me b {
       display: block;
@@ -507,7 +472,20 @@
       transition: transform .22s;
       overflow: auto;
       padding: 22px;
-      z-index: 20
+      z-index: 300;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch
+    }
+
+    /* baris tombol (Tutup / Ekspor PDF) tetap terlihat saat drawer di-scroll */
+    #drawer>.acts:first-child {
+      position: sticky;
+      top: -22px;
+      margin: -22px -22px 10px;
+      padding: 12px 22px;
+      background: var(--pn);
+      border-bottom: 1px solid var(--ln);
+      z-index: 5
     }
 
     #drawer.open {
@@ -611,7 +589,7 @@
       padding: 10px 16px;
       border-radius: var(--r);
       color: #fff;
-      z-index: 50;
+      z-index: 500;
       max-width: 92vw
     }
 
@@ -623,7 +601,7 @@
       background: var(--red)
     }
 
-            /* Mobile Overlay Backdrop */
+    /* Mobile Overlay Backdrop */
     #navBackdrop {
       display: none;
     }
@@ -691,7 +669,8 @@
         transition: background .2s;
       }
 
-      #menuToggleBtn:hover, #menuToggleBtn:active {
+      #menuToggleBtn:hover,
+      #menuToggleBtn:active {
         background: rgba(255, 255, 255, .25);
       }
 
@@ -787,7 +766,9 @@
         width: 100%;
       }
 
+      #shell>aside .brand .drawer-close-btn,
       .drawer-close-btn {
+        display: block;
         background: none;
         border: none;
         color: #c8ecf0;
@@ -873,27 +854,42 @@
         font-size: .84rem;
       }
 
-            /* Drawer Rincian Tiket Mobile */
+      /* Drawer Rincian Tiket Mobile */
       #drawer {
         width: 100% !important;
         max-width: 100vw;
         height: 100%;
-        padding: 16px 14px 40px;
+        height: 100dvh;
+        padding: 0 14px calc(40px + env(safe-area-inset-bottom));
         box-sizing: border-box;
       }
 
-      #drawer .acts:first-child {
+      #drawer>.acts:first-child {
         display: flex !important;
         flex-direction: row !important;
+        flex-wrap: nowrap !important;
         align-items: center !important;
         justify-content: space-between !important;
         gap: 8px;
-        padding-bottom: 10px;
+        position: sticky;
+        top: 0;
+        margin: 0 -14px 12px;
+        padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+        background: #fff;
         border-bottom: 1px solid var(--ln);
-        margin-bottom: 12px;
+        z-index: 5;
       }
 
-      #drawer .acts:first-child > div {
+      #drawer>.acts:first-child>div {
+        flex-wrap: nowrap !important;
+      }
+
+      #drawer>.acts:first-child .btn {
+        white-space: nowrap;
+        flex: none !important;
+      }
+
+      #drawer .acts:first-child>div {
         display: flex;
         align-items: center;
         gap: 6px;
@@ -1089,7 +1085,12 @@
       }
 
       /* Baris Data Master & Maintenance */
-      #techRows tr, #invRows tr, #custRows tr, #devRows tr, #maintRows tr, #notifRows tr {
+      #techRows tr,
+      #invRows tr,
+      #custRows tr,
+      #devRows tr,
+      #maintRows tr,
+      #notifRows tr {
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -1117,6 +1118,15 @@
         min-height: 36px;
       }
 
+
+      #notifList>div {
+        flex-direction: column;
+        align-items: stretch !important;
+      }
+
+      #vNotifikasi .head .acts {
+        width: auto;
+      }
 
       dialog {
         width: 95vw !important;
@@ -1254,7 +1264,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, .85);
-      z-index: 100;
+      z-index: 400;
       display: none;
       align-items: center;
       justify-content: center
@@ -1283,6 +1293,95 @@
       border-radius: 50%;
       width: 36px;
       height: 36px
+    }
+
+    /* ---- cetak / PDF detail tiket ---- */
+    #printArea {
+      display: none
+    }
+
+    @media print {
+      @page {
+        size: A4;
+        margin: 1.5cm
+      }
+
+      body.printing {
+        background: #fff !important
+      }
+
+      body.printing>*:not(#printArea) {
+        display: none !important
+      }
+
+      body.printing #printArea {
+        display: block
+      }
+
+      #printArea {
+        font-family: Calibri, "Segoe UI", Arial, sans-serif;
+        font-size: 10pt;
+        color: #0e323d;
+        line-height: 1.35
+      }
+
+      #printArea * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact
+      }
+
+      #printArea table {
+        border-collapse: collapse;
+        width: 100%
+      }
+
+      #printArea tr {
+        page-break-inside: avoid;
+        break-inside: avoid
+      }
+
+      #printArea h2 {
+        margin: 0;
+        padding: 0;
+        color: #1a6478
+      }
+
+      #printArea img {
+        max-width: 100%
+      }
+
+      #printArea .sec-title {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #1a6478;
+        border-bottom: 2px solid #07aab8;
+        padding-bottom: 3pt;
+        margin-top: 14pt;
+        margin-bottom: 6pt;
+        text-transform: uppercase;
+        page-break-after: avoid
+      }
+
+      #printArea .meta-table td {
+        padding: 5pt 8pt;
+        border: 1px solid #d0e6eb
+      }
+
+      #printArea .meta-table td.lbl {
+        background-color: #e4f5f8;
+        font-weight: bold;
+        color: #1a6478;
+        width: 22%
+      }
+
+      #printArea .badge {
+        display: inline-block;
+        padding: 2.5pt 8pt;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 8.5pt;
+        color: #fff
+      }
     }
   </style>
 </head>
@@ -1354,14 +1453,17 @@
         <button class="nav hide" id="navCust" data-view="pelanggan">Pelanggan</button>
         <button class="nav hide" id="navDev" data-view="perangkat">Perangkat</button>
         <button class="nav hide" id="navMaint" data-view="maintenance">Maintenance</button>
-        <button class="nav hide" id="navNotif" data-view="notifikasi" style="display:flex;align-items:center;justify-content:space-between">
+        <button class="nav hide" id="navNotif" data-view="notifikasi"
+          style="display:flex;align-items:center;justify-content:space-between">
           <span>Notifikasi</span>
           <span class="tag hide" id="notifBadge"
             style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:.72rem">0</span>
         </button>
         <button class="nav hide" id="navTeam" data-view="teknisi">Teknisi</button>
+        <button class="nav hide" id="navReset" data-view="reset" style="color:#ffb4ae">Kosongkan Data</button>
       </div>
-      <div class="me desktop-me"><b id="meName"></b><span id="meRole" class="mu"></span><br><button id="logout">Keluar</button></div>
+      <div class="me desktop-me"><b id="meName"></b><span id="meRole" class="mu"></span><br><button
+          id="logout">Keluar</button></div>
       <div class="drawer-user-info" style="display:none" id="drawerUserInfo">
         <b id="drawerUserName"></b>
         <span id="drawerUserRole" class="mu"></span>
@@ -1531,6 +1633,67 @@
         <div class="panel">
           <div id="notifList"></div>
           <div class="empty hide" id="notifEmpty">Belum ada notifikasi.</div>
+        </div>
+      </section>
+      <section id="vReset" class="hide">
+        <div class="head">
+          <h2>Kosongkan Database</h2>
+        </div>
+        <div class="panel" style="padding:20px;max-width:640px;border-color:#f5c2c0">
+          <div
+            style="background:#fde8e7;border:1px solid #f5c2c0;color:var(--red);padding:12px 14px;border-radius:6px;margin-bottom:16px;font-size:.9rem">
+            ⚠️ <b>Tindakan ini permanen dan tidak bisa dibatalkan.</b><br>
+            Data yang Anda centang di bawah akan dihapus. Menghapus tiket juga menghapus komentar, lampiran foto, dan
+            riwayat auditnya. Akun admin tidak pernah ikut dihapus.
+          </div>
+          <style>
+            .rs-item {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 11px 12px;
+              border: 1px solid var(--ln);
+              border-radius: var(--r);
+              margin-bottom: 8px;
+              cursor: pointer;
+              font-weight: 600
+            }
+
+            .rs-item input {
+              width: 20px;
+              height: 20px;
+              flex: none;
+              margin: 0;
+              padding: 0
+            }
+
+            .rs-item .rs-n {
+              margin-left: auto;
+              font-weight: 700
+            }
+
+            .rs-item:has(input:checked) {
+              border-color: var(--red);
+              background: #fff5f4
+            }
+          </style>
+          <label class="rs-item" style="background:#f4fafb"><input type="checkbox" id="rsAll"> Pilih semua</label>
+          <label class="rs-item"><input type="checkbox" class="rs-cb" data-k="tiket"> Tiket <span class="rs-n num mu"
+              id="rsTiket">0</span></label>
+          <label class="rs-item"><input type="checkbox" class="rs-cb" data-k="pelanggan"> Pelanggan <span
+              class="rs-n num mu" id="rsCust">0</span></label>
+          <label class="rs-item"><input type="checkbox" class="rs-cb" data-k="perangkat"> Perangkat <span
+              class="rs-n num mu" id="rsDev">0</span></label>
+          <label class="rs-item"><input type="checkbox" class="rs-cb" data-k="maintenance"> Jadwal Maintenance <span
+              class="rs-n num mu" id="rsMaint">0</span></label>
+          <label class="rs-item"><input type="checkbox" class="rs-cb" data-k="teknisi"> Teknisi (akun &amp; undangan)
+            <span class="rs-n num mu" id="rsTech">0</span></label>
+          <div class="f" style="margin-top:14px">
+            <label for="rsConfirm">Ketik <b>KOSONGKAN</b> untuk melanjutkan</label>
+            <input id="rsConfirm" autocomplete="off" placeholder="KOSONGKAN">
+          </div>
+          <button class="btn" id="rsBtn" style="background:var(--red);border-color:var(--red);width:100%"
+            disabled>Kosongkan Data Terpilih</button>
         </div>
       </section>
     </main>
@@ -1749,14 +1912,14 @@
       if ($("meNameMob")) $("meNameMob").textContent = me.nama;
       if ($("drawerUserName")) $("drawerUserName").textContent = me.nama;
       if ($("drawerUserRole")) $("drawerUserRole").textContent = me.role;
-      ["navCust", "navDev", "navTeam", "newBtn", "sla"].forEach(i => $(i).classList.toggle("hide", !admin));
+      ["navCust", "navDev", "navTeam", "navReset", "newBtn", "sla"].forEach(i => $(i).classList.toggle("hide", !admin));
       $("navMaint").classList.remove("hide");
       $("navNotif").classList.remove("hide");
       $("addMaintBtn").classList.toggle("hide", !admin);
       run(load());
       updateNotifBadge();
     }
-        // Mobile Drawer (Kebab Menu Titik 3)
+    // Mobile Drawer (Kebab Menu Titik 3)
     const sidebar = $("sidebarNav");
     const backdrop = $("navBackdrop");
     function toggleMobileMenu(open) {
@@ -1778,6 +1941,8 @@
       $("vPerangkat").classList.toggle("hide", b.dataset.view !== "perangkat");
       $("vMaintenance").classList.toggle("hide", b.dataset.view !== "maintenance");
       $("vNotifikasi").classList.toggle("hide", b.dataset.view !== "notifikasi");
+      $("vReset").classList.toggle("hide", b.dataset.view !== "reset");
+      if (b.dataset.view === "reset") run(renderReset());
       if (b.dataset.view === "teknisi") run(loadTeam());
       if (b.dataset.view === "pelanggan") run(loadCustomersView());
       if (b.dataset.view === "perangkat") run(loadDevicesView());
@@ -1805,7 +1970,13 @@
       $("pipe").innerHTML = Object.keys(n).map(k => `<button class="seg${statusF === k ? " on" : ""}" data-s="${k}" style="--c:${COL[k]};flex:${Math.max(n[k], .7)}"><b class="num">${n[k]}</b><span>${ST[k]}</span></button>`).join("");
     }
     $("pipe").onclick = e => { const b = e.target.closest(".seg"); if (!b) return; statusF = statusF === b.dataset.s ? "" : b.dataset.s; renderPipe(); renderRows() };
-    const techName = id => { if (id == null) return "–"; const u = techs.find(x => x.id === id); return u ? esc(u.nama) : "#" + id };
+    const techName = id => {
+      if (id == null) return "–";
+      const u = techs.find(x => x.id === id); if (u) return esc(u.nama);
+      const tk = tickets.find(x => x.ditugaskan_ke === id && x.nama_teknisi); if (tk) return esc(tk.nama_teknisi);
+      if (me && me.id === id) return esc(me.nama);
+      return "#" + id;
+    };
     function renderRows() {
       const q = $("q").value.toLowerCase(), fp = $("fp").value, fsla = $("fsla") ? $("fsla").value : "";
       const list = tickets.filter(t => (!statusF || t.status === statusF) && (!fp || t.prioritas === fp) && (!fsla || (fsla === "breach" ? t.sla.melewati_sla : !t.sla.melewati_sla)) && (!q || [t.judul, t.pelanggan, t.perangkat, t.lokasi].join(" ").toLowerCase().includes(q)));
@@ -1872,7 +2043,7 @@
           : "";
         return `<div class="att-grid" id="attGrid">${thumbs}${uploadBtn}</div>`;
       }
-      $("drawer").innerHTML = `<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><div>${escBtnHtml}<button class="btn sm sec" id="exportWordBtn" style="margin-left:6px" title="Ekspor detail tiket ke Word">📄 Ekspor Word</button><button class="btn sm sec" id="dclose" style="margin-left:6px">Tutup</button></div></div>
+      $("drawer").innerHTML = `<div class="acts" style="justify-content:space-between"><span class="mu">Tiket #${t.id}</span><div>${escBtnHtml}<button class="btn sm sec" id="exportWordBtn" style="margin-left:6px" title="Unduh detail tiket sebagai PDF">📄 Ekspor PDF</button><button class="btn sm sec" id="dclose" style="margin-left:6px">Tutup</button></div></div>
    <h2 style="margin:8px 0">${esc(t.judul)}</h2><span class="tag p-${esc(t.prioritas)}">${esc(t.prioritas)}</span> <span class="tag s-${esc(t.status)}">${ST[t.status]}</span>
    ${t.sla.melewati_sla ? `<span class="tag sla-bad" style="margin-left:4px">Melewati SLA</span>` : ""}${escBadge}
    ${escBanner}
@@ -1901,11 +2072,17 @@
           const alasan = prompt("Alasan eskalasi tiket (notifikasi & email akan dikirim ke PIC/Admin):");
           if (!alasan || !alasan.trim()) return;
           await run(api("POST", `/tickets/${t.id}/escalate`, { alasan: alasan.trim() })
-            .then(() => { toast("Tiket berhasil dieskalasi dan notifikasi terkirim", true); openDetail(t.id); load(); }));
+            .then(r => {
+              const em = r && r.email_teknisi;
+              if (em && !em.terkirim) toast("Tiket dieskalasi. Email ke teknisi " + em.nama + " BELUM terkirim: " + (em.catatan || "periksa pengaturan email"), false);
+              else if (em) toast("Tiket dieskalasi. Email terkirim ke teknisi " + em.nama, true);
+              else toast("Tiket berhasil dieskalasi dan notifikasi terkirim", true);
+              openDetail(t.id); load();
+            }));
         };
       }
       if ($("exportWordBtn")) {
-        $("exportWordBtn").onclick = () => run(exportTicketToWord(t));
+        $("exportWordBtn").onclick = () => run(exportTicketToPdf(t));
       }
       // --- Load & bind lampiran ---
       async function reloadAtts() {
@@ -2211,7 +2388,7 @@
         const list = res.data || [];
         $("notifEmpty").classList.toggle("hide", list.length > 0);
         $("notifList").innerHTML = list.map(n => `
-          <div style="padding:14px 16px;border-bottom:1px solid var(--bd);background:${n.dibaca ? 'transparent' : 'rgba(7,170,184,.06)'};display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--ln);background:${n.dibaca ? 'transparent' : 'rgba(7,170,184,.06)'};display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
             <div>
               <div style="font-weight:600;font-size:.9rem;color:var(--ink)">
                 ${n.tipe && n.tipe.startsWith('eskalasi') ? '⚡ ' : '🔔 '}${esc(n.judul)}
@@ -2239,6 +2416,41 @@
       loadNotificationsView();
     })());
     $("refreshNotifBtn").onclick = () => run(loadNotificationsView());
+
+    /* ---- kosongkan database (admin) ---- */
+    const rsKeys = () => [...document.querySelectorAll(".rs-cb")];
+    const rsSync = () => {
+      const cb = rsKeys();
+      $("rsAll").checked = cb.every(c => c.checked);
+      $("rsBtn").disabled = !(cb.some(c => c.checked) && $("rsConfirm").value.trim() === "KOSONGKAN");
+    };
+    async function renderReset() {
+      $("rsConfirm").value = ""; rsKeys().forEach(c => c.checked = false); rsSync();
+      try { customersList = (await api("GET", "/customers")).data || [] } catch (e) { }
+      try { allDevicesList = (await api("GET", "/devices")).data || [] } catch (e) { }
+      try { tickets = (await api("GET", "/tickets?per_page=100")).data || tickets } catch (e) { }
+      try { techs = await api("GET", "/users?role=teknisi") } catch (e) { }
+      try { schedulesList = (await api("GET", "/maintenance-schedules")).data || [] } catch (e) { }
+      $("rsTiket").textContent = tickets.length;
+      $("rsCust").textContent = customersList.length;
+      $("rsDev").textContent = allDevicesList.length;
+      $("rsMaint").textContent = schedulesList.length;
+      $("rsTech").textContent = techs.length;
+    }
+    $("rsAll").onchange = () => { rsKeys().forEach(c => c.checked = $("rsAll").checked); rsSync() };
+    document.addEventListener("change", e => { if (e.target.classList && e.target.classList.contains("rs-cb")) rsSync() });
+    $("rsConfirm").oninput = rsSync;
+    $("rsBtn").onclick = () => run((async () => {
+      if (me.role !== "admin") throw new Error("Hanya admin yang boleh mengosongkan data");
+      if ($("rsConfirm").value.trim() !== "KOSONGKAN") throw new Error("Ketik KOSONGKAN untuk konfirmasi");
+      const pilih = {}; rsKeys().forEach(c => pilih[c.dataset.k] = c.checked);
+      const nama = rsKeys().filter(c => c.checked).map(c => c.parentElement.firstChild.nextSibling.textContent.trim()).join(", ");
+      if (!Object.values(pilih).some(Boolean)) throw new Error("Pilih minimal satu data");
+      if (!confirm("Yakin? Data berikut akan dihapus PERMANEN:\n" + nama)) return;
+      await api("POST", "/admin/reset-data", { konfirmasi: "KOSONGKAN", ...pilih });
+      toast("Data terpilih berhasil dikosongkan", true);
+      await load(); await renderReset(); updateNotifBadge();
+    })());
 
     /* ---- ekspor excel & word ---- */
     function getLogoDataUrl() {
@@ -2330,7 +2542,7 @@
 <body>
   <table>
     <tr><td colspan="17" class="title">PT NETWORK INCIDENT TICKETING MANAGEMENT INDONESIA (NITMI)</td></tr>
-    <tr><td colspan="17" class="sub">ICRM+ DAFTAR TIKET GANGGUAN & PEMELIHARAAN JARINGAN</td></tr>
+    <tr><td colspan="17" class="sub">DAFTAR TIKET GANGGUAN & PEMELIHARAAN JARINGAN</td></tr>
     <tr><td colspan="17" class="meta">Waktu Ekspor: ${nowStr} · Total Data: ${list.length} tiket · Diekspor oleh: ${esc(me ? me.nama : 'Admin')} (${esc(me ? me.role : '')})</td></tr>
     <tr><td colspan="17" style="border:none;height:10px"></td></tr>
     <thead>
@@ -2400,8 +2612,8 @@
       toast("Daftar tiket berhasil diekspor ke Excel (.xls)", true);
     }
 
-    async function exportTicketToWord(t) {
-      toast("Menyiapkan dokumen Word tiket #" + t.id + "...", true);
+    async function exportTicketToPdf(t) {
+      toast("Menyiapkan PDF tiket #" + t.id + "...", true);
       const logoDataUrl = getLogoDataUrl();
 
       let attList = [];
@@ -2594,6 +2806,9 @@
         logsHtml = `<p style="color:#666;font-style:italic;margin:4pt 0">Belum ada riwayat audit tercatat.</p>`;
       }
 
+      let adminNama = me && me.role === "admin" ? me.nama : (t.nama_pembuat || "");
+      adminNama = adminNama || "Admin";
+
       const wordDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
   <meta charset='utf-8'>
@@ -2671,7 +2886,7 @@
       </tr>
       <tr>
         <td class="lbl">Teknisi Bertugas (PIC)</td>
-        <td><b>${techName(t.ditugaskan_ke)}</b></td>
+        <td><b>${t.nama_teknisi ? esc(t.nama_teknisi) : techName(t.ditugaskan_ke)}</b></td>
         <td class="lbl">Waktu Laporan Masuk</td>
         <td>${when(t.created_at)}</td>
       </tr>
@@ -2721,21 +2936,21 @@
     ${logsHtml}
 
     <!-- 6. PENGESAHAN -->
-    <div class="sec-title" style="margin-top:20pt">6. Lembar Pengesahan Penanganan</div>
+    <div class="sec-title" style="margin-top:20pt;page-break-after:avoid">6. Lembar Pengesahan Penanganan</div>
+    <div style="font-size:8.5pt;color:#666;margin-top:4pt">Dicetak pada ${nowStr}</div>
     <table style="width:100%;border:none;margin-top:14pt">
       <tr>
         <td style="width:50%;text-align:center;border:none;vertical-align:top">
           <div style="font-size:9.5pt;color:#666">Teknisi Pelaksana Lapangan,</div>
           <div style="height:55px"></div>
-          <div style="font-weight:bold;text-decoration:underline;color:#1a6478">${techName(t.ditugaskan_ke)}</div>
+          <div style="font-weight:bold;text-decoration:underline;color:#1a6478">${t.nama_teknisi ? esc(t.nama_teknisi) : techName(t.ditugaskan_ke)}</div>
           <div style="font-size:8.5pt;color:#666">Field Support / Maintenance</div>
         </td>
         <td style="width:50%;text-align:center;border:none;vertical-align:top">
-          <div style="font-size:9.5pt;color:#666">Dicetak pada ${nowStr}</div>
-          <div style="font-size:9.5pt;color:#666">Penanggung Jawab / Admin Operasi,</div>
-          <div style="height:45px"></div>
-          <div style="font-weight:bold;text-decoration:underline;color:#1a6478">${esc(me ? me.nama : 'Admin Operasi')}</div>
-          <div style="font-size:8.5pt;color:#666">Network Operation Center (NOC)</div>
+          <div style="font-size:9.5pt;color:#666">Admin / Penanggung Jawab,</div>
+          <div style="height:55px"></div>
+          <div style="font-weight:bold;text-decoration:underline;color:#1a6478">${esc(adminNama)}</div>
+          <div style="font-size:8.5pt;color:#666">Admin Operasi (NOC)</div>
         </td>
       </tr>
     </table>
@@ -2743,17 +2958,25 @@
 </body>
 </html>`;
 
-      const blob = new Blob(["\ufeff", wordDoc], { type: "application/msword;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      // Cetak ke PDF: isi dokumen ditaruh di #printArea, lalu dialog cetak browser
+      // (pilih "Simpan sebagai PDF") dibuka. Nama file PDF mengikuti judul halaman.
       const cleanTitle = (t.judul || "tiket").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30);
-      a.href = url;
-      a.download = `Tiket_${t.id}_${cleanTitle}_NITM.doc`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast("Dokumen Word tiket #" + t.id + " berhasil diekspor (.doc)", true);
+      const inner = wordDoc.split("<body>")[1].split("</body>")[0];
+      let pa = $("printArea");
+      if (!pa) { pa = document.createElement("div"); pa.id = "printArea"; document.body.appendChild(pa) }
+      pa.innerHTML = inner;
+      const oldTitle = document.title;
+      document.title = `Tiket_${t.id}_${cleanTitle}_NITM`;
+      document.body.classList.add("printing");
+      const done = () => {
+        window.removeEventListener("afterprint", done);
+        document.body.classList.remove("printing");
+        pa.innerHTML = ""; document.title = oldTitle;
+      };
+      window.addEventListener("afterprint", done);
+      toast("Pilih \"Simpan sebagai PDF\" pada dialog cetak", true);
+      await new Promise(r => setTimeout(r, 400));
+      window.print();
     }
 
     checkActivation();

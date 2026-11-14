@@ -104,3 +104,43 @@ def test_notifications_list_and_mark_read(client, admin_token, teknisi, ticket_i
     r_check = client.get("/notifications?unread_only=true", headers=auth(tek_token))
     assert r_check.get_json()["unread_count"] == 0
     assert len(r_check.get_json()["data"]) == 0
+
+
+def test_eskalasi_mengirim_email_ke_teknisi(client, admin_token, teknisi, ticket_id, monkeypatch):
+    from app.routes import notifications as mod
+    terkirim = []
+    monkeypatch.setattr(mod, "send_ticket_notification",
+                        lambda **kw: terkirim.append(kw["to"]) or (True, ""))
+    tid, _ = teknisi
+    client.put(f"/tickets/{ticket_id}/assign", headers=auth(admin_token), json={"teknisi_id": tid})
+    r = client.post(f"/tickets/{ticket_id}/escalate", headers=auth(admin_token), json={"alasan": "Belum ada respons"})
+    assert r.status_code == 200
+    assert "budi@contoh.com" in terkirim
+    assert r.get_json()["email_teknisi"] == {"nama": "Budi", "terkirim": True, "catatan": ""}
+
+
+def test_email_notifikasi_lewat_apps_script(app, monkeypatch):
+    import io
+    import json
+    import urllib.request
+    from app.mailer import send_ticket_notification
+
+    seen = {}
+
+    class Resp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=0, context=None):
+        seen["body"] = json.loads(req.data.decode())
+        return Resp(b"ok")
+
+    monkeypatch.setenv("APPS_SCRIPT_URL", "https://script.example/exec")
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    app.config["TESTING"] = False
+    ok, note = send_ticket_notification("budi@contoh.com", "Budi", "ESKALASI", "Tiket dieskalasi")
+    assert ok and note == ""
+    assert seen["body"]["to"] == "budi@contoh.com" and seen["body"]["subject"] == "ESKALASI"

@@ -327,7 +327,7 @@ def export_tickets_excel():
     return Response(
         csv_data,
         mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=daftar_tiket_pln_icon_plus.csv"}
+        headers={"Content-Disposition": "attachment; filename=daftar_tiket_nitmi.csv"}
     )
 
 

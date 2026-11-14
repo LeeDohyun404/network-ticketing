@@ -20,14 +20,20 @@ def _notify_and_email(user, ticket, subjek, pesan, tipe="eskalasi"):
     )
     db.session.add(notif)
     # Kirim email ke alamat asli user
+    terkirim, catatan = False, "Pengguna tidak punya email"
     if user.email:
-        send_ticket_notification(
-            to=user.email,
-            nama=user.nama,
-            subjek=subjek,
-            isi_pesan=pesan,
-            ticket_info=ticket.to_dict() if ticket else None,
-        )
+        try:
+            terkirim, catatan = send_ticket_notification(
+                to=user.email,
+                nama=user.nama,
+                subjek=subjek,
+                isi_pesan=pesan,
+                ticket_info=ticket.to_dict() if ticket else None,
+            )
+        except Exception as e:  # noqa: BLE001  (gagal email tidak boleh menggagalkan eskalasi)
+            terkirim, catatan = False, f"Gagal mengirim email ({e})"
+    notif.email_terkirim = bool(terkirim)
+    return bool(terkirim), catatan
 
 
 @bp.post("/tickets/<int:ticket_id>/escalate")
@@ -94,10 +100,12 @@ def escalate_ticket(ticket_id):
         f"Pelanggan: {ticket.pelanggan} | Lokasi: {ticket.lokasi or '-'}"
     )
 
+    email_teknisi = None
     if ticket.ditugaskan_ke:
         tech = db.session.get(User, ticket.ditugaskan_ke)
         if tech and tech.id != uid:
-            _notify_and_email(tech, ticket, subjek_email, pesan_email, tipe="eskalasi")
+            ok, note = _notify_and_email(tech, ticket, subjek_email, pesan_email, tipe="eskalasi")
+            email_teknisi = {"nama": tech.nama, "terkirim": ok, "catatan": note}
 
     # Kirim notifikasi & email ke semua admin
     admins = User.query.filter_by(role="admin").all()
@@ -108,6 +116,7 @@ def escalate_ticket(ticket_id):
     db.session.commit()
     return jsonify({
         "pesan": f"Tiket berhasil dieskalasi ke Level {level}",
+        "email_teknisi": email_teknisi,
         "tiket": ticket.to_dict(with_logs=True),
     })
 
@@ -200,4 +209,3 @@ def mark_all_read():
     Notification.query.filter_by(user_id=uid, dibaca=False).update({"dibaca": True})
     db.session.commit()
     return jsonify({"pesan": "Semua notifikasi ditandai telah dibaca"})
-

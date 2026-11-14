@@ -56,6 +56,7 @@ def create_app(test_config=None):
     from .routes.maintenance import bp as maintenance_bp
     from .routes.attachments import bp as attachments_bp
     from .routes.notifications import bp as notifications_bp
+    from .routes.admin import bp as admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(tickets_bp)
@@ -63,10 +64,15 @@ def create_app(test_config=None):
     app.register_blueprint(maintenance_bp)
     app.register_blueprint(attachments_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(admin_bp)
 
     @app.get("/")
     def index():
         return {"nama": "Network Incident Ticketing API", "status": "ok"}
+
+    @app.get("/favicon.ico")
+    def favicon():
+        return send_from_directory(os.path.join(app.root_path, "static"), "favicon.ico")
 
     @app.get("/ui")
     def ui():
@@ -161,6 +167,20 @@ def create_app(test_config=None):
                     );
                 """))
                 conn.commit()
+        except Exception:
+            pass
+
+        # Kolom email_terkirim pada tabel notifications (database lama, Postgres maupun SQLite)
+        try:
+            from sqlalchemy import inspect
+            insp = inspect(db.engine)
+            if "notifications" in insp.get_table_names():
+                cols = {c["name"] for c in insp.get_columns("notifications")}
+                if "email_terkirim" not in cols:
+                    default = "FALSE" if db.engine.dialect.name == "postgresql" else "0"
+                    with db.engine.begin() as conn:
+                        conn.execute(db.text(
+                            f"ALTER TABLE notifications ADD COLUMN email_terkirim BOOLEAN DEFAULT {default}"))
         except Exception:
             pass
 

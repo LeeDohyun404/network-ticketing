@@ -114,6 +114,25 @@ def _send_apps_script(url, to, nama, link, hours):
         return False, f"Gagal mengirim email ({e}). Salin tautan ini dan kirim manual."
 
 
+def _post_apps_script(url, to, subject, body):
+    """Kirim email apa saja lewat Google Apps Script (HTTPS). Mengembalikan (terkirim, catatan)."""
+    import json
+    import urllib.request
+
+    payload = {"token": os.getenv("APPS_SCRIPT_TOKEN", ""), "to": to, "subject": subject, "body": body}
+    req = urllib.request.Request(
+        url, data=json.dumps(payload).encode(),
+        headers={"content-type": "text/plain;charset=utf-8"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=20, context=_ssl_context()) as r:
+            reply = r.read().decode(errors="replace").strip()
+        if reply == "ok":
+            return True, ""
+        return False, f"Gagal mengirim email (balasan skrip: {reply[:120]})"
+    except Exception as e:  # noqa: BLE001
+        return False, f"Gagal mengirim email ({e})"
+
+
 def send_ticket_notification(to, nama, subjek, isi_pesan, ticket_info=None):
     """Kirim email notifikasi tiket/eskalasi ke teknisi atau admin. Mengembalikan (terkirim, catatan)."""
     host = os.getenv("MAIL_SERVER")
@@ -136,21 +155,24 @@ def send_ticket_notification(to, nama, subjek, isi_pesan, ticket_info=None):
         f"Halo {nama},\n\n"
         f"{isi_pesan}\n"
         f"{detail}\n"
-        f"Silakan buka portal ICRM+ untuk melakukan penanganan lebih lanjut:\n"
-        f"https://ticketing-api.wasmer.app/ui\n\n"
-        f"--\nPLN Icon Plus - ICRM+ Incident Ticketing"
+        f"Silakan buka portal NITMI untuk melakukan penanganan lebih lanjut:\n"
+        f"{(os.getenv('APP_BASE_URL') or 'https://ticketing-api.wasmer.app').rstrip('/')}/ui\n\n"
+        f"--\nPT NITMI - Network Incident Ticketing Management Indonesia"
     )
 
     if current_app.config.get("TESTING") or not (host or api_key or script_url):
         print(f"[EMAIL NOTIFIKASI] Ke: {to} | Subjek: {subjek} | Pesan: {isi_pesan}")
         return False, "Email belum diatur (MAIL_SERVER kosong)."
 
+    if script_url:
+        return _post_apps_script(script_url, to, subjek, body_text)
+
     if api_key and not current_app.config.get("TESTING"):
         import json
         import urllib.request
         sender = os.getenv("MAIL_FROM") or os.getenv("MAIL_USERNAME", "")
         payload = {
-            "sender": {"name": "ICRM+ PLN Icon Plus", "email": sender},
+            "sender": {"name": "NITMI Ticketing", "email": sender},
             "to": [{"email": to, "name": nama}],
             "subject": subjek,
             "textContent": body_text,
@@ -186,4 +208,3 @@ def send_ticket_notification(to, nama, subjek, isi_pesan, ticket_info=None):
         return True, ""
     except Exception as e:
         return False, f"Gagal mengirim email ({e})"
-

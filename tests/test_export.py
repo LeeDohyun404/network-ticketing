@@ -47,6 +47,12 @@ def test_ui_halaman_memiliki_tombol_ekspor(client):
     assert "exportExcelBtn" in text
     assert "exportWordBtn" in text
     assert "exportTicketsToExcel" in text
-    assert "exportTicketToWord" in text
+    assert "exportTicketToPdf" in text
     assert "normalizeImageShape" in text
 
+
+
+def test_favicon_tersedia(client):
+    assert client.get("/favicon.ico").status_code == 200
+    assert client.get("/static/favicon-192.png").status_code == 200
+    assert "rel=\"icon\"" in client.get("/ui").data.decode("utf-8")

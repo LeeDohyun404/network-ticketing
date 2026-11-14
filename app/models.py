@@ -227,6 +227,14 @@ class Ticket(db.Model):
             "melewati_sla": melewati_resp or melewati_res,
         }
 
+    @staticmethod
+    def _nama_user(user_id):
+        """Nama pengguna untuk ditampilkan (teknisi tidak boleh membaca daftar /users)."""
+        if not user_id:
+            return None
+        user = db.session.get(User, user_id)
+        return user.nama if user else None
+
     def to_dict(self, with_logs=False, with_comments=False, targets_map=None, now=None):
         data = {
             "id": self.id,
@@ -242,6 +250,8 @@ class Ticket(db.Model):
             "status": self.status,
             "dibuat_oleh": self.dibuat_oleh,
             "ditugaskan_ke": self.ditugaskan_ke,
+            "nama_teknisi": self._nama_user(self.ditugaskan_ke),
+            "nama_pembuat": self._nama_user(self.dibuat_oleh),
             "created_at": self.created_at.isoformat(),
             "responded_at": self.responded_at.isoformat() if self.responded_at else None,
             "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
@@ -559,6 +569,7 @@ class Notification(db.Model):
     pesan = db.Column(db.Text, nullable=False)
     tipe = db.Column(db.String(30), nullable=False, default="eskalasi")
     dibaca = db.Column(db.Boolean, default=False, nullable=False)
+    email_terkirim = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     user = db.relationship("User", backref="notifications")
@@ -587,6 +598,6 @@ class Notification(db.Model):
             "pesan": self.pesan,
             "tipe": self.tipe,
             "dibaca": bool(self.dibaca),
+            "email_terkirim": bool(self.email_terkirim),
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
-
